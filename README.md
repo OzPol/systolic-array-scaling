@@ -12,13 +12,26 @@ We compare 2×2, 4×4, and 8×8 output-stationary arrays while computing the sam
 
 We use Questa to verify matrix outputs and measure cycles, stalls, useful MACs per cycle, and processing-element utilization. We use Vivado to estimate FPGA resource use and timing for a consistent KV260 target. The input limits are part of our RTL experiment; they are not measurements of physical memory bandwidth.
 
-## Documentation and project files
+## Repository structure
 
-- [Project Overview](docs/documentation.md) — project motivation, dataflow, tiling, and connection to computer architecture concepts.
-- [Architecture](docs/architecture.md) — PE dataflow, arithmetic widths, tiling, input staging, and stalls.
-- [Experiment Plan](docs/experiments.md) — correctness checks, metrics, synthesis comparison, and result records.
-- [Development Setup](docs/setup.md) — fixed settings and environment details to verify.
-- [Configuration Matrix](experiments/configurations.csv) — the 18 planned combinations of matrix size, grid size, and input budget.
+Existing files are linked below. Planned paths are listed without links; their contents and filenames may be refined during implementation.
+
+| Path | Purpose | Status |
+|---|---|---|
+| `README.md` | Project introduction and navigation | Current |
+| [docs/documentation.md](docs/documentation.md) | Project overview and computer architecture context | Current |
+| [docs/architecture.md](docs/architecture.md) | Dataflow, arithmetic, tiling, staging, and stalls | Draft |
+| [docs/experiments.md](docs/experiments.md) | Configurations, verification, metrics, and analysis | Draft |
+| [docs/setup.md](docs/setup.md) | Tool settings and reproducibility instructions | Draft; tool details pending |
+| [experiments/configurations.csv](experiments/configurations.csv) | The 18 core experiment configurations | Current |
+| `rtl/` | VHDL processing elements, array, staging, and control | Planned |
+| `tb/` | Self-checking testbench and input vectors | Planned |
+| `scripts/` | Questa and Vivado runs and result analysis | Planned |
+| `constraints/` | FPGA timing constraints | Planned |
+| `results/` | Reviewed measurements and their provenance | Planned |
+| `deliverables/` | Proposal, presentations, and final report | Planned |
+| `CONTRIBUTING.md` | Team contribution guidelines | Planned |
+| `.gitignore` | Generated-file exclusions | Planned |
 
 ## Status
 
