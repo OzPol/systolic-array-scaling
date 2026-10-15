@@ -14,7 +14,7 @@ The 2Ã—2 grid is the architectural baseline. We compare it with 4Ã—4 and 8
 | Matrix dimension $N$ | 8, 16 | Same complete $N\times N$ product across grids |
 | Combined input budget $B$ | 4, 8, 16 words/clock | Same RTL budget rule and test vectors |
 
-The Cartesian product is **18 core configurations**, listed in [`../experiments/configurations.csv`](../experiments/configurations.csv). Each uses signed 16-bit operands and a 36-bit exact accumulator. For each $(N,B)$ pair, compare $P=4,8$ with $P=2$ using identical matrix contents. Directed correctness cases include zero, identity, signed extremes, and mixed signs; a fixed-seed random case supplies the principal repeatable performance workload. Record the seed and input-file checksum with every result. These tests do not add architectural configurations to the 18-row sweep.
+The Cartesian product is **18 core configurations**, listed in [`configurations.csv`](configurations.csv). Each uses signed 16-bit operands and a 36-bit exact accumulator. For each $(N,B)$ pair, compare $P=4,8$ with $P=2$ using identical matrix contents. Directed correctness cases include zero, identity, signed extremes, and mixed signs; a fixed-seed random case supplies the principal repeatable performance workload. Record the seed and input-file checksum with every result. These tests do not add architectural configurations to the 18-row sweep.
 
 ## Measurement boundaries
 

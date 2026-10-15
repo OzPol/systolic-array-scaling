@@ -1,0 +1,51 @@
+# Questa / ModelSim
+work/
+modelsim.ini
+transcript
+vsim.wlf
+wlft*
+*.wlf
+*.mpf
+*.cr.mti
+*.mti
+vish_stacktrace.vstf
+questa.tops
+qrun.out/
+qrun.log
+
+# Vivado
+*.jou
+*.log
+*.str
+*.backup.jou
+*.backup.log
+.Xil/
+vivado*.zip
+*.cache/
+*.hw/
+*.ip_user_files/
+*.sim/
+*.runs/
+*.gen/
+*.xpr
+webtalk*.jou
+webtalk*.log
+usage_statistics_webtalk.*
+hs_err_pid*
+
+# Bulky generated output (commit reviewed summaries under results/ instead)
+results/raw/
+sim_out/
+build/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -6,8 +6,8 @@ This page records the verified environment and exact commands once the project r
 
 | Purpose | Tool | Verified version / location |
 |---|---|---|
-| VHDL compilation and simulation | Siemens QuestaSim | To be recorded after access check |
-| FPGA synthesis and implementation | AMD Vivado | To be recorded after access check |
+| VHDL compilation and simulation | Siemens QuestaSim | 2026.2 per [course install guide](https://eel5721-reconfigurable-computing.github.io/documentation/software/questa/questa-installation.html); confirm with `qrun -version`. Needs GatorLink VPN and `SALT_LICENSE_SERVER` set. |
+| FPGA synthesis and implementation | AMD Vivado | ML Standard 2025.2.1 per [course install guide](https://eel5721-reconfigurable-computing.github.io/documentation/software/vivado/vivado-installation.html); confirm in Vivado's About dialog. |
 | Software reference and result analysis | Python | To be recorded with pinned dependencies, if used |
 
 ## Fixed experiment settings
@@ -19,7 +19,7 @@ This page records the verified environment and exact commands once the project r
 | Grid sizes | 2Ã—2, 4Ã—4, 8Ã—8 |
 | Matrix orders | 8, 16 |
 | Combined input budgets | 4, 8, 16 words per clock |
-| FPGA target | KV260 device; **exact Vivado part string to verify** |
+| FPGA target | Board file "Kria KV260 Vision AI Starter Kit SOM" v1.4, Rev_B01 (installed in Vivado 2025.2.1). Device totals per board file: 117,120 LUTs, 234,240 FFs, 144 BRAM, 64 URAM, 1,248 DSPs. **Exact `xck26-…` part string still to record.** |
 | Clock constraint | 10 ns |
 | Board programming | Not required |
 

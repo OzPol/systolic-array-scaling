@@ -23,7 +23,7 @@ Existing files are linked below. Planned paths are listed without links; their c
 | [docs/architecture.md](docs/architecture.md) | Dataflow, arithmetic, tiling, staging, and stalls | Draft |
 | [docs/experiments.md](docs/experiments.md) | Configurations, verification, metrics, and analysis | Draft |
 | [docs/setup.md](docs/setup.md) | Tool settings and reproducibility instructions | Draft; tool details pending |
-| [experiments/configurations.csv](experiments/configurations.csv) | The 18 core experiment configurations | Current |
+| [docs/configurations.csv](docs/configurations.csv) | The 18 core experiment configurations | Current |
 | `rtl/` | VHDL processing elements, array, staging, and control | Planned |
 | `tb/` | Self-checking testbench and input vectors | Planned |
 | `scripts/` | Questa and Vivado runs and result analysis | Planned |
@@ -31,7 +31,7 @@ Existing files are linked below. Planned paths are listed without links; their c
 | `results/` | Reviewed measurements and their provenance | Planned |
 | `deliverables/` | Proposal, presentations, and final report | Planned |
 | `CONTRIBUTING.md` | Team contribution guidelines | Planned |
-| `.gitignore` | Generated-file exclusions | Planned |
+| `.gitignore` | Generated-file exclusions | Current |
 
 ## Status
 
