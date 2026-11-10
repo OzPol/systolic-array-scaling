@@ -1,0 +1,612 @@
+
+######## log_p2_n16_b16.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p2_n16_b16 tb_systolic -do "run -all; quit -f" -gP=2 -gVEC_FILE=tb/vectors/vec_n16.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=16 -gN=16 
+# Start time: 10:09:36 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=2 N=16 B=16 cases=8 compute=1216
+#    Time: 118205 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:09:38 on Nov 10,2026, Elapsed time: 0:00:02
+# Errors: 0, Warnings: 3
+
+######## log_p2_n16_b4.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p2_n16_b4 tb_systolic -do "run -all; quit -f" -gP=2 -gVEC_FILE=tb/vectors/vec_n16.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=4 -gN=16 
+# Start time: 10:09:26 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=2 N=16 B=4 cases=8 compute=1216
+#    Time: 118205 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:09:29 on Nov 10,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 3
+
+######## log_p2_n16_b8.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p2_n16_b8 tb_systolic -do "run -all; quit -f" -gP=2 -gVEC_FILE=tb/vectors/vec_n16.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=8 -gN=16 
+# Start time: 10:09:31 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=2 N=16 B=8 cases=8 compute=1216
+#    Time: 118205 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:09:33 on Nov 10,2026, Elapsed time: 0:00:02
+# Errors: 0, Warnings: 3
+
+######## log_p2_n8_b16.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p2_n8_b16 tb_systolic -do "run -all; quit -f" -gP=2 -gVEC_FILE=tb/vectors/vec_n08.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=16 -gN=8 
+# Start time: 10:08:46 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=2 N=8 B=16 cases=8 compute=176
+#    Time: 19645 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:08:49 on Nov 10,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 3
+
+######## log_p2_n8_b4.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p2_n8_b4 tb_systolic -do "run -all; quit -f" -gP=2 -gVEC_FILE=tb/vectors/vec_n08.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=4 -gN=8 
+# Start time: 10:08:36 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=2 N=8 B=4 cases=8 compute=176
+#    Time: 19645 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:08:39 on Nov 10,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 3
+
+######## log_p2_n8_b8.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p2_n8_b8 tb_systolic -do "run -all; quit -f" -gP=2 -gVEC_FILE=tb/vectors/vec_n08.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=8 -gN=8 
+# Start time: 10:08:42 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=2 N=8 B=8 cases=8 compute=176
+#    Time: 19645 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:08:44 on Nov 10,2026, Elapsed time: 0:00:02
+# Errors: 0, Warnings: 3
+
+######## log_p4_n16_b16.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p4_n16_b16 tb_systolic -do "run -all; quit -f" -gP=4 -gVEC_FILE=tb/vectors/vec_n16.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=16 -gN=16 
+# Start time: 10:09:50 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=4 N=16 B=16 cases=8 compute=368
+#    Time: 50365 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:09:53 on Nov 10,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 3
+
+######## log_p4_n16_b4.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p4_n16_b4 tb_systolic -do "run -all; quit -f" -gP=4 -gVEC_FILE=tb/vectors/vec_n16.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=4 -gN=16 
+# Start time: 10:09:40 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=4 N=16 B=4 cases=8 compute=608
+#    Time: 69565 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:09:43 on Nov 10,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 3
+
+######## log_p4_n16_b8.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p4_n16_b8 tb_systolic -do "run -all; quit -f" -gP=4 -gVEC_FILE=tb/vectors/vec_n16.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=8 -gN=16 
+# Start time: 10:09:45 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=4 N=16 B=8 cases=8 compute=368
+#    Time: 50365 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:09:48 on Nov 10,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 3
+
+######## log_p4_n8_b16.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p4_n8_b16 tb_systolic -do "run -all; quit -f" -gP=4 -gVEC_FILE=tb/vectors/vec_n08.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=16 -gN=8 
+# Start time: 10:09:00 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=4 N=8 B=16 cases=8 compute=60
+#    Time: 10365 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:09:03 on Nov 10,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 3
+
+######## log_p4_n8_b4.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p4_n8_b4 tb_systolic -do "run -all; quit -f" -gP=4 -gVEC_FILE=tb/vectors/vec_n08.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=4 -gN=8 
+# Start time: 10:08:51 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=4 N=8 B=4 cases=8 compute=88
+#    Time: 12605 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:08:54 on Nov 10,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 3
+
+######## log_p4_n8_b8.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p4_n8_b8 tb_systolic -do "run -all; quit -f" -gP=4 -gVEC_FILE=tb/vectors/vec_n08.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=8 -gN=8 
+# Start time: 10:08:56 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=4 N=8 B=8 cases=8 compute=60
+#    Time: 10365 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:08:58 on Nov 10,2026, Elapsed time: 0:00:02
+# Errors: 0, Warnings: 3
+
+######## log_p8_n16_b16.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p8_n16_b16 tb_systolic -do "run -all; quit -f" -gP=8 -gVEC_FILE=tb/vectors/vec_n16.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=16 -gN=16 
+# Start time: 10:10:05 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=8 N=16 B=16 cases=8 compute=124
+#    Time: 30845 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:10:08 on Nov 10,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 3
+
+######## log_p8_n16_b4.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p8_n16_b4 tb_systolic -do "run -all; quit -f" -gP=8 -gVEC_FILE=tb/vectors/vec_n16.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=4 -gN=16 
+# Start time: 10:09:55 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=8 N=16 B=4 cases=8 compute=304
+#    Time: 45245 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:09:57 on Nov 10,2026, Elapsed time: 0:00:02
+# Errors: 0, Warnings: 3
+
+######## log_p8_n16_b8.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p8_n16_b8 tb_systolic -do "run -all; quit -f" -gP=8 -gVEC_FILE=tb/vectors/vec_n16.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=8 -gN=16 
+# Start time: 10:10:00 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=8 N=16 B=8 cases=8 compute=184
+#    Time: 35645 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:10:02 on Nov 10,2026, Elapsed time: 0:00:02
+# Errors: 0, Warnings: 3
+
+######## log_p8_n8_b16.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p8_n8_b16 tb_systolic -do "run -all; quit -f" -gP=8 -gVEC_FILE=tb/vectors/vec_n08.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=16 -gN=8 
+# Start time: 10:09:20 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=8 N=8 B=16 cases=8 compute=23
+#    Time: 7405 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:09:24 on Nov 10,2026, Elapsed time: 0:00:04
+# Errors: 0, Warnings: 3
+
+######## log_p8_n8_b4.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p8_n8_b4 tb_systolic -do "run -all; quit -f" -gP=8 -gVEC_FILE=tb/vectors/vec_n08.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=4 -gN=8 
+# Start time: 10:09:05 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=8 N=8 B=4 cases=8 compute=44
+#    Time: 9085 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:09:08 on Nov 10,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 3
+
+######## log_p8_n8_b8.txt ########
+Reading pref.tcl
+
+# 2026.2
+
+# vsim -c -quiet -work build/work_p8_n8_b8 tb_systolic -do "run -all; quit -f" -gP=8 -gVEC_FILE=tb/vectors/vec_n08.txt -gRESULT_FILE=results/raw/sim_results.csv -gB=8 -gN=8 
+# Start time: 10:09:10 on Nov 10,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  Questa Sim-64
+# //  Version 2026.2 win64 May 18 2026
+# //
+# // Unpublished work. Copyright 2026 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ns  Iteration: 0  Instance: /tb_systolic
+# ** Note: TB PASS P=8 N=8 B=8 cases=8 compute=30
+#    Time: 7965 ns  Iteration: 0  Instance: /tb_systolic
+# vsim: End time: 10:09:14 on Nov 10,2026, Elapsed time: 0:00:04
+# Errors: 0, Warnings: 3
