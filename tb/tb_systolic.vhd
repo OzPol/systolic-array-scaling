@@ -54,6 +54,9 @@ architecture sim of tb_systolic is
   -- monitor results
   signal macs, out_words, out_errs, idx_errs : integer := 0;
 
+  -- Functions below compute the EXPECTED cycle counts from P, N, B, so the testbench
+  -- can check the DUT's counters against an independent formula.
+
   -- Words in boundary step t (A words + B words)
   function step_words(t : integer) return integer is
     variable cnt : integer := 0;
@@ -76,14 +79,15 @@ architecture sim of tb_systolic is
     return s * NT * NT;
   end function;
 
-  constant EXP_STALL   : integer := exp_stalls;
-  constant EXP_ADV     : integer := NT * NT * T_STEPS;
-  constant EXP_CAP     : integer := NT * NT;
+  constant EXP_STALL   : integer := exp_stalls;                    -- cycles lost waiting on the input budget
+  constant EXP_ADV     : integer := NT * NT * T_STEPS;             -- every tile takes T_STEPS advancing cycles
+  constant EXP_CAP     : integer := NT * NT;                       -- one capture cycle per tile
   constant EXP_COMPUTE : integer := EXP_ADV + EXP_STALL + EXP_CAP;
-  constant EXP_TOTAL   : integer := EXP_COMPUTE + N * N;
+  constant EXP_TOTAL   : integer := EXP_COMPUTE + N * N;           -- plus serial readout of N*N words
 begin
-  clk <= not clk after 5 ns;  -- 10 ns period
+  clk <= not clk after 5 ns;  -- 10 ns period (simulation-only: generates the clock)
 
+  -- Device under test: the whole design.
   u_dut : entity work.systolic_top
     generic map (P => P, N => N, INSTR => true)
     port map (
@@ -139,7 +143,9 @@ begin
     end if;
   end process;
 
-  -- Main sequencer
+  -- Main sequencer: reads test vectors from file, runs each case, checks results, logs a CSV row.
+  -- Unlike the RTL, this process runs top-to-bottom like software ("wait" statements are
+  -- simulation-only and can't be synthesized).
   main : process
     file     f  : text;
     file     rf : text;
@@ -167,16 +173,19 @@ begin
       end if;
     end procedure;
   begin
+    -- First line of the vector file = number of test cases.
     file_open(f, VEC_FILE, read_mode);
     readline(f, l);
     read(l, ncases);
 
+    -- Hold reset for 4 clocks to put the DUT in a known state.
     rst <= '1';
     for i in 1 to 4 loop wait until rising_edge(clk); end loop;
     rst <= '0';
     wait until rising_edge(clk);
 
     for cs in 0 to ncases - 1 loop
+      -- Load matrices A, B and the expected result C (from the software reference) for this case.
       for i in 0 to N*N-1 loop rd_vec(f, w16); va(i) := to_integer(signed(w16)); end loop;
       for i in 0 to N*N-1 loop rd_vec(f, w16); vb(i) := to_integer(signed(w16)); end loop;
       for i in 0 to N*N-1 loop rd_vec(f, w36); vc(i) := signed(w36); end loop;
@@ -184,6 +193,7 @@ begin
       wait until rising_edge(clk);
       wait until rising_edge(clk);
 
+      -- Pulse start for one clock, then wait for the DUT to finish (1 ms timeout).
       start <= '1';
       wait until rising_edge(clk);
       start <= '0';
@@ -191,6 +201,7 @@ begin
       wait until rising_edge(clk);
       wait until rising_edge(clk);
 
+      -- Check everything for this case.
       case_errs := 0;
       check(done = '1', "case " & integer'image(cs) & ": timeout waiting for done");
       check(out_words = N*N, "case " & integer'image(cs) & ": wrong output word count " & integer'image(out_words));
