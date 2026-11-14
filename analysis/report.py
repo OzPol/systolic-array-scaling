@@ -153,6 +153,7 @@ No power, energy, physical DRAM bandwidth, or board-execution claim follows from
     (output/'report.md').write_text(md)
     paths = [Path(simulation), Path(hardware)]
     manifest = {'source_commit': subprocess.check_output(['git','rev-parse','HEAD'], cwd=ROOT, text=True).strip(),
+                'source_dirty': bool(subprocess.check_output(['git','status','--porcelain'], cwd=ROOT, text=True).strip()),
                 'inputs_sha256': {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.exists()},
                 'measured_configurations': len(measurements), 'missing_vivado_p': missing}
     (output/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')

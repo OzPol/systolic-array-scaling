@@ -18,7 +18,7 @@ elif [[ $# -gt 0 ]]; then
     echo 'Usage: bash scripts/bootstrap.sh [--install-system]' >&2
     exit 2
 fi
-python3 -c 'import sys; assert sys.version_info >= (3, 10), "Python 3.10+ required"'
+python3 -c 'import sys; assert sys.version_info >= (3, 12), "Python 3.12+ required"'
 if ! command -v "${GHDL:-ghdl}" >/dev/null; then
     echo 'GHDL is missing. Ubuntu/WSL: bash scripts/bootstrap.sh --install-system' >&2
     echo 'On macOS: brew install ghdl python make' >&2
