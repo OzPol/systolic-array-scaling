@@ -53,6 +53,9 @@ architecture sim of tb_systolic is
 
   -- monitor results
   signal macs, out_words, out_errs, idx_errs : integer := 0;
+  -- Observe interface clocks independently of the DUT's counters and formulas.
+  signal observed_compute, observed_total : integer := 0;
+  signal active : boolean := false;
 
   -- Functions below compute the EXPECTED cycle counts from P, N, B, so the testbench
   -- can check the DUT's counters against an independent formula.
@@ -128,7 +131,16 @@ begin
     if rising_edge(clk) then
       if start = '1' then
         macs <= 0; out_words <= 0; out_errs <= 0; idx_errs <= 0;
+        observed_compute <= 0; observed_total <= 0; active <= true;
       else
+        if active then
+          if done = '1' then
+            active <= false;
+          else
+            observed_total <= observed_total + 1;
+            if out_valid = '0' then observed_compute <= observed_compute + 1; end if;
+          end if;
+        end if;
         inc := 0;
         for i in 0 to P*P-1 loop
           if mac_fire(i) = '1' then inc := inc + 1; end if;
@@ -208,6 +220,8 @@ begin
       check(out_errs = 0,    "case " & integer'image(cs) & ": output mismatches = " & integer'image(out_errs));
       check(idx_errs = 0,    "case " & integer'image(cs) & ": output order errors = " & integer'image(idx_errs));
       check(macs = N*N*N,    "case " & integer'image(cs) & ": useful MACs " & integer'image(macs) & " /= N^3");
+      check(observed_compute = to_integer(cnt_compute), "compute counter disagrees with interface clock count");
+      check(observed_total = to_integer(cnt_total), "total counter disagrees with interface clock count");
       check(to_integer(cnt_stall)   = EXP_STALL,   "case " & integer'image(cs) & ": stall cycles " & integer'image(to_integer(cnt_stall)) & " expected " & integer'image(EXP_STALL));
       check(to_integer(cnt_adv)     = EXP_ADV,     "case " & integer'image(cs) & ": advance cycles " & integer'image(to_integer(cnt_adv)) & " expected " & integer'image(EXP_ADV));
       check(to_integer(cnt_cap)     = EXP_CAP,     "case " & integer'image(cs) & ": capture cycles " & integer'image(to_integer(cnt_cap)) & " expected " & integer'image(EXP_CAP));
@@ -232,7 +246,7 @@ begin
              " cases=" & integer'image(ncases) & " compute=" & integer'image(EXP_COMPUTE) severity note;
     else
       report "TB FAIL P=" & integer'image(P) & " N=" & integer'image(N) & " B=" & integer'image(B) &
-             " errors=" & integer'image(total_errs) severity error;
+             " errors=" & integer'image(total_errs) severity failure;
     end if;
     finish;
   end process;
