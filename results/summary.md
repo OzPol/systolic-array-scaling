@@ -61,6 +61,7 @@ Speedup and scaling efficiency are relative to the 2x2 grid at the same N and B.
 | P | N | impl_luts | impl_ffs | impl_dsps | impl_bram_tiles | impl_wns_ns | impl_timing_met |
 |---|---|---|---|---|---|---|---|
 | 2 | 16 | 7260 | 9437 | 4 | 0 | 3.955 | yes |
+| 4 | 16 | 11488 | 9505 | 16 | 0 | 3.786 | yes |
 
 Status: only the P values listed above have been run through Vivado. Missing rows have **not been run yet**.
 About 9.2k of the flip-flops are the 16x16x36-bit result storage, which is the same for every P.
