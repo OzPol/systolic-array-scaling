@@ -28,7 +28,7 @@ Start with the [analysis](results/analysis/report.md), [contribution review](doc
 ## Project documents
 
 - [Final report PDF](deliverables/report/main.pdf) and [editable LaTeX source](deliverables/report/main.tex).
-- [Submitted project proposal PDF](docs/eel5764_systolic_array_project_proposal.pdf).
+- Submitted project proposal: [PDF](docs/eel5764_systolic_array_project_proposal.pdf) and [Markdown text](deliverables/proposal/Proposal.md).
 - [Course project guidelines PDF](docs/eel5764_project_guidelines_fall_2026.pdf).
 - [Architecture and mathematical definitions](docs/architecture.md).
 - [Video storyboard and narration](deliverables/video/outline.md).
