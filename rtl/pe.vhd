@@ -43,7 +43,8 @@ begin
   b_v_out <= b_v_q;
   acc     <= acc_q;
   -- Combinational (no clock): an AND gate. A MAC happens only if enabled and both inputs are valid.
-  fire    <= en and a_v_in and b_v_in;
+  -- Reset/clear take priority over en in the register process; no MAC occurs then.
+  fire    <= en and a_v_in and b_v_in and not rst and not clr;
 
   -- Clocked process: describes the registers. Everything inside happens on the rising clock edge.
   process (clk)
