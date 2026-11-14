@@ -54,9 +54,9 @@ def main():
             lines += [f"{x & 0xFFFF:04x}" for x in b]
             lines += [f"{x & ((1 << 36) - 1):09x}" for x in c]
         path = out / f"vec_n{n:02d}.txt"
-        path.write_text("\n".join(lines) + "\n")
+        path.write_text("\n".join(lines) + "\n", encoding="ascii", newline="\n")
         manifest.append(f"{path.name} sha256={hashlib.sha256(path.read_bytes()).hexdigest()}")
-    (out / "MANIFEST.txt").write_text("\n".join(manifest) + "\n")
+    (out / "MANIFEST.txt").write_text("\n".join(manifest) + "\n", encoding="ascii", newline="\n")
     print("\n".join(manifest))
 
 

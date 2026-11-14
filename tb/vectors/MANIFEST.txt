@@ -1,5 +1,5 @@
 seed_base=5764
 perf_case_index=5
 cases=zero,identity,min_x_min,min_x_max,mixed_sign,random_perf,random_2,random_3
-vec_n08.txt sha256=16e187c715cddd3b2c242b53eefda8e2e05b82c75e18614ab88e6f29f3186905
-vec_n16.txt sha256=24ffdeb64b825bbce607da1f3b9a88a082300e327e99719513d4ca3dffe92bf6
+vec_n08.txt sha256=bdf41acdcd7e63a0c74d8b3ab3c546294c7231a44fd3ec35f4c58060f686571f
+vec_n16.txt sha256=3f684ad35d12b82f928809a37e553e523dd4acbac0d2be79ae52b914528008cb
