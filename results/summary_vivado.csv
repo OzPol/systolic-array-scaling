@@ -1,2 +1,4 @@
 P,N,synth_luts,synth_ffs,synth_dsps,synth_bram_tiles,synth_wns_ns,synth_timing_met,impl_luts,impl_ffs,impl_dsps,impl_bram_tiles,impl_wns_ns,impl_timing_met
 2,16,7372,9437,4,0,7.450,yes,7260,9437,4,0,3.955,yes
+4,16,11744,9505,16,0,6.261,yes,11488,9505,16,0,3.786,yes
+8,16,8307,10211,64,0,3.644,yes,8166,10211,64,0,2.176,yes
