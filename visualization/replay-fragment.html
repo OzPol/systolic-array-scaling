@@ -1,8 +1,14 @@
 <div id="pe-replay">
   <h3>Systolic array simulation</h3>
   <div class="viz-controls">
-    <label class="form-label">Configuration
-      <select class="form-select" data-config aria-label="Simulation configuration"></select>
+    <label class="form-label">PE grid
+      <select class="form-select" data-grid aria-label="PE grid"><option value="2">2×2</option><option value="4">4×4</option><option value="8">8×8</option></select>
+    </label>
+    <label class="form-label">Matrix workload
+      <select class="form-select" data-matrix aria-label="Matrix workload"><option value="8">8×8</option><option value="16">16×16</option></select>
+    </label>
+    <label class="form-label">Input words per clock
+      <select class="form-select" data-budget aria-label="Input words per clock"><option value="4">4</option><option value="8">8</option><option value="16">16</option></select>
     </label>
     <label class="form-label">View
       <select class="form-select" data-view aria-label="Activity geometry">
@@ -35,11 +41,11 @@
 (()=>{
 const root=document.getElementById('pe-replay');
 const traces=JSON.parse(root.querySelector('[data-traces]').textContent).traces;
-const q=s=>root.querySelector(s), config=q('[data-config]'), view=q('[data-view]'), slider=q('[data-slider]'), svg=q('[data-plot]');
+const q=s=>root.querySelector(s), config={value:0}, view=q('[data-view]'), slider=q('[data-slider]'), svg=q('[data-plot]');
 const ns='http://www.w3.org/2000/svg';
 let index=15,timer=null,rotation=.7;
-for(let k=0;k<traces.length;k++){const t=traces[k],o=document.createElement('option');o.value=k;o.textContent=`P${t.P} · N${t.N} · B${t.B}`;config.append(o)}
-config.value=String(traces.findIndex(t=>t.P===8&&t.N===16&&t.B===4));
+function choose(){config.value=traces.findIndex(t=>t.P===+q('[data-grid]').value&&t.N===+q('[data-matrix]').value&&t.B===+q('[data-budget]').value)}
+choose();
 function node(tag,attrs={},text){let el=document.createElementNS(ns,tag);for(const[k,v]of Object.entries(attrs))el.setAttribute(k,v);if(text!==undefined)el.textContent=text;svg.append(el);return el}
 function line(a,b,attrs={}){return node('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'var(--border)','stroke-width':1,...attrs})}
 function text(x,y,value,attrs={}){return node('text',{x,y,...attrs},value)}
@@ -93,7 +99,7 @@ function draw(){const t=traces[+config.value],p=t.P,n=t.N;index=Math.max(0,Math.
   }
  }
 }
-config.addEventListener('change',()=>{stop();draw()});view.addEventListener('change',draw);
+for(const field of ['grid','matrix','budget'])q('[data-'+field+']').addEventListener('change',()=>{stop();choose();draw()});view.addEventListener('change',draw);
 slider.addEventListener('input',()=>{stop();index=+slider.value;draw()});
 q('[data-back]').addEventListener('click',()=>{stop();index--;draw()});q('[data-next]').addEventListener('click',()=>{stop();index++;draw()});
 q('[data-play]').addEventListener('click',()=>{if(timer){stop();return}const t=traces[+config.value];if(index>=t.compute-1)index=0;q('[data-play]').textContent='Pause';q('[data-status]').setAttribute('aria-live','off');timer=setInterval(()=>{index++;draw();if(index>=t.compute-1)stop()},matchMedia('(prefers-reduced-motion: reduce)').matches?200:80)});

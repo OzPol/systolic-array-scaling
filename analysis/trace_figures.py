@@ -1,10 +1,33 @@
-"""Scientific surfaces and space-time geometry from observed PE MAC events."""
+"""Spatial views covering every grid, matrix workload, and input budget."""
 from pathlib import Path
+import json
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import animation, colors
 import numpy as np
+
+GRIDS=(2,4,8)
+MATRICES=(8,16)
+BUDGETS=(4,8,16)
+
+
+def configurations(traces):
+    by_key={(t['N'],t['P'],t['B']):t for t in traces}
+    expected={(n,p,b) for n in MATRICES for p in GRIDS for b in BUDGETS}
+    if len(traces)!=18 or set(by_key)!=expected:
+        raise ValueError('spatial comparison requires all 18 configurations')
+    return by_key
+
+
+def activity(trace):
+    """One binary MAC-event value for each physical PE and compute clock."""
+    p=trace['P'];volume=np.zeros((trace['compute'],p,p),dtype=np.uint8)
+    for clock,frame in enumerate(trace['frames'][:trace['compute']]):
+        mask=int(frame[4],16)
+        for i in range(p*p):volume[clock,i//p,i%p]=(mask>>(p*p-1-i))&1
+    if int(volume.sum())!=trace['N']**3:raise ValueError('incomplete useful work in spatial trace')
+    return volume
 
 
 def first_tile(trace):
@@ -25,105 +48,143 @@ def counts_at(trace,clock):
 
 
 def render(traces,output):
-    output=Path(output)
-    selected=[next(t for t in traces if (t['P'],t['N'],t['B'])==(8,16,b)) for b in (16,4)]
-    plt.rcParams.update({'font.family':'DejaVu Sans','font.size':10,'text.color':'black',
-                         'axes.labelcolor':'black','svg.hashsalt':'systolic-trace'})
-    xx,yy=np.meshgrid(np.arange(8),np.arange(8))
-    cmap=plt.get_cmap('viridis');norm=colors.Normalize(0,16)
+    by_key=configurations(traces);output=Path(output)
+    volumes={key:activity(t) for key,t in by_key.items()}
+    cumulative={key:np.cumsum(v,axis=0) for key,v in volumes.items()}
+    cmap=plt.get_cmap('turbo');norm=colors.Normalize(0,1)
+    plt.rcParams.update({'font.family':'DejaVu Sans','font.size':9,'text.color':'black',
+                         'axes.labelcolor':'black','svg.hashsalt':'systolic-all-configurations'})
 
-    def axes_style(ax,zlabel,zmax):
-        ax.set(xlabel='PE column',ylabel='PE row',zlabel=zlabel,xlim=(-.1,7.1),ylim=(-.1,7.1),zlim=(0,zmax))
-        ax.set_xticks([0,2,4,6,7]);ax.set_yticks([0,2,4,6,7]);ax.view_init(elev=28,azim=-57)
-        if ax.get_subplotspec().colspan.start > 0: ax.set_zlabel('')
-        for axis in (ax.xaxis,ax.yaxis,ax.zaxis):axis.set_pane_color((1,1,1,1))
+    def save(fig,name,dpi=155):
+        fig.savefig(output/f'{name}.png',dpi=dpi,bbox_inches='tight',pad_inches=.2)
+        fig.savefig(output/f'{name}.svg',bbox_inches='tight',metadata={'Date':None})
+        plt.close(fig)
 
-    def surfaces(clock):
-        fig=plt.figure(figsize=(12,5.5))
-        fig.subplots_adjust(left=.01,right=.90,bottom=.07,top=.80,wspace=.12)
-        for i,t in enumerate(selected,1):
-            ax=fig.add_subplot(1,2,i,projection='3d');values,phase=counts_at(t,clock)
-            ax.plot_surface(xx,yy,values,cmap=cmap,norm=norm,edgecolor='#46515a',linewidth=.35,antialiased=True)
-            axes_style(ax,'Useful MACs completed',16)
-            length=len(first_tile(t));local=min(clock,length)
-            state='tile complete' if clock>=length else {1:'grid advance',2:'waiting for input',3:'tile complete'}[phase]
-            ax.set_title(f'P=8, N=16, B={t["B"]} · clock {local}/{length}\n{state}',pad=14)
-        fig.suptitle('The same 8×8 topology: useful work after the same number of clocks',fontsize=13)
-        return fig
+    def style(ax,p,zmax,zlabel='',zpercent=False):
+        ax.set(xlabel='PE column',ylabel='PE row',zlabel=zlabel,xlim=(0,p-1),ylim=(0,p-1),zlim=(0,zmax))
+        ticks=[0,p-1] if p==2 else [0,(p-1)//2,p-1]
+        ax.set_xticks(ticks);ax.set_yticks(ticks)
+        ax.set_zticks([0,zmax/2,zmax])
+        if zpercent:ax.set_zticklabels(['0%','50%','100%'])
+        ax.tick_params(labelsize=8,pad=0)
+        ax.xaxis.labelpad=0;ax.yaxis.labelpad=0;ax.zaxis.labelpad=2
+        ax.view_init(elev=24,azim=-55)
+        ax.set_box_aspect((1,1,1.05))
+        for axis in (ax.xaxis,ax.yaxis,ax.zaxis):
+            axis.set_pane_color((1,1,1,1))
+            axis._axinfo['grid']['color']=(.75,.78,.8,.3)
 
-    fig=surfaces(16)
-    fig.savefig(output/'work_surface.png',dpi=170,bbox_inches='tight')
-    fig.savefig(output/'work_surface.svg',bbox_inches='tight',metadata={'Date':None})
-    plt.close(fig)
+    def title(t):
+        p,n,b=t['P'],t['N'],t['B']
+        return f'Grid {p}×{p} · matrix {n}×{n} · B={b}\n{t["compute"]} clocks · {t["macs"]/(p*p*t["compute"]):.1%} PE use'
 
-    fig=plt.figure(figsize=(12,5.8))
-    fig.subplots_adjust(left=.01,right=.90,bottom=.07,top=.82,wspace=.12)
-    for k,t in enumerate(selected,1):
-        ax=fig.add_subplot(1,2,k,projection='3d');cs=[];rs=[];clocks=[]
-        for cycle,f in enumerate(first_tile(t),1):
-            mask=int(f[4],16)
-            for i in range(64):
-                if mask>>(63-i)&1:cs.append(i%8);rs.append(i//8);clocks.append(cycle)
-        ax.scatter(cs,rs,clocks,c=clocks,cmap='viridis',vmin=1,vmax=76,s=7,marker='s',alpha=.7,depthshade=False)
-        axes_style(ax,'Tile clock',76)
-        ax.set_title(f'B={t["B"]}: {len(first_tile(t))} clocks for one tile',pad=14)
-    fig.suptitle('Space–time geometry · each point is one observed PE multiply-accumulate',fontsize=13)
-    fig.savefig(output/'space_time.png',dpi=170,bbox_inches='tight')
-    fig.savefig(output/'space_time.svg',bbox_inches='tight',metadata={'Date':None});plt.close(fig)
+    def atlas(matrices,kind,name):
+        rows=len(matrices)*3
+        fig=plt.figure(figsize=(12,rows*3.35+.7))
+        fig.subplots_adjust(left=.03,right=.88,bottom=.055,top=.94,hspace=.40,wspace=.28)
+        for ni,n in enumerate(matrices):
+            for pi,p in enumerate(GRIDS):
+                for bi,b in enumerate(BUDGETS):
+                    key=(n,p,b);t=by_key[key];v=volumes[key]
+                    ax=fig.add_subplot(rows,3,(ni*3+pi)*3+bi+1,projection='3d')
+                    xx,yy=np.meshgrid(np.arange(p),np.arange(p))
+                    if kind=='volume':
+                        # Four-clock bins retain actual physical time on the vertical axis.
+                        starts=np.arange(0,t['compute'],4)
+                        z=np.array([min(s+4,t['compute']) for s in starts],dtype=float)
+                        density=np.array([v[s:min(s+4,len(v))].mean(axis=0) for s in starts])
+                        mid=p//2
+                        xz,zz=np.meshgrid(np.arange(p),z)
+                        ax.plot_surface(xz,np.full_like(xz,mid),zz,facecolors=cmap(density[:,mid,:]),
+                                        rstride=1,cstride=1,shade=False,alpha=.9,linewidth=0)
+                        yz,zz=np.meshgrid(np.arange(p),z)
+                        ax.plot_surface(np.full_like(yz,mid),yz,zz,facecolors=cmap(density[:,:,mid]),
+                                        rstride=1,cstride=1,shade=False,alpha=.9,linewidth=0)
+                        for fraction in (.25,.5,.75):
+                            zslice=max(1,int(t['compute']*fraction))
+                            index=min(len(density)-1,(zslice-1)//4)
+                            ax.plot_surface(xx,yy,np.full_like(xx,zslice),facecolors=cmap(density[index]),
+                                            rstride=1,cstride=1,shade=False,alpha=.8,linewidth=0)
+                        style(ax,p,t['compute'],'Compute clock' if bi==0 else '')
+                    elif kind=='work':
+                        clock=min(32,t['compute']);values=cumulative[key][clock-1]/(n**3/(p*p))
+                        ax.plot_surface(xx,yy,values,cmap=cmap,norm=norm,edgecolor='#424b54',linewidth=.35,alpha=.95)
+                        style(ax,p,1,'Assigned MAC work' if bi==0 else '',True)
+                    elif kind=='wavefront':
+                        first=np.full((p,p),np.nan);last=np.full((p,p),np.nan)
+                        for clock,frame in enumerate(first_tile(t),1):
+                            mask=int(frame[4],16)
+                            for i in range(p*p):
+                                if mask>>(p*p-1-i)&1:
+                                    r,c=divmod(i,p)
+                                    if np.isnan(first[r,c]):first[r,c]=clock
+                                    last[r,c]=clock
+                        for values,color in ((first,'#377f9b'),(last,'#cf8b3c')):
+                            ax.plot_surface(xx,yy,values,color=color,alpha=.8,edgecolor='#424b54',linewidth=.35)
+                        style(ax,p,len(first_tile(t)),'Tile clock' if bi==0 else '')
+                    ax.set_title(title(t),fontsize=10,pad=10)
+        heading={'volume':'PE activity through space and time','work':'Full-product work completed after 32 compute clocks',
+                 'wavefront':'First and last MAC at every PE in the first output tile'}[kind]
+        workload=' · '.join(f'{n}×{n} matrices' for n in matrices)
+        fig.suptitle(f'{heading}\n{workload} · every PE grid and input budget',fontsize=14,y=.985)
+        if kind in ('volume','work'):
+            colorax=fig.add_axes([.91,.16,.012,.65])
+            bar=fig.colorbar(plt.cm.ScalarMappable(norm=norm,cmap=cmap),cax=colorax)
+            bar.set_label('MACs / PE / clock in 4-clock bins' if kind=='volume' else 'Fraction of total assigned MAC work',labelpad=9)
+        else:
+            from matplotlib.patches import Patch
+            fig.legend(handles=[Patch(facecolor='#377f9b',label='First MAC'),Patch(facecolor='#cf8b3c',label='Last MAC')],
+                       loc='lower center',ncol=2,frameon=False)
+        save(fig,name)
 
-    fig=plt.figure(figsize=(11,4.8))
-    fig.subplots_adjust(left=.01,right=.90,bottom=.10,top=.85,wspace=.18)
-    for i,n in enumerate((8,16),1):
-        ax=fig.add_subplot(1,2,i,projection='3d');grid=np.zeros((3,3))
-        for r,b in enumerate((4,8,16)):
-            for c,p in enumerate((2,4,8)):
-                t=next(t for t in traces if (t['P'],t['N'],t['B'])==(p,n,b));grid[r,c]=t['macs']/t['compute']
-        px,bx=np.meshgrid([2,4,8],[4,8,16])
+    for n in MATRICES:
+        atlas((n,),'volume',f'activity_matrix{n:02d}')
+        atlas((n,),'work',f'work_matrix{n:02d}')
+        atlas((n,),'wavefront',f'wavefront_matrix{n:02d}')
+    atlas(MATRICES,'volume','space_time')
+    atlas(MATRICES,'work','work_surface')
+    atlas(MATRICES,'wavefront','wavefront_surfaces')
+
+    fig=plt.figure(figsize=(12,5))
+    fig.subplots_adjust(left=.03,right=.91,bottom=.12,top=.83,wspace=.24)
+    for index,n in enumerate(MATRICES,1):
+        ax=fig.add_subplot(1,2,index,projection='3d')
+        grid=np.array([[by_key[(n,p,b)]['macs']/by_key[(n,p,b)]['compute'] for p in GRIDS] for b in BUDGETS])
+        px,bx=np.meshgrid(GRIDS,BUDGETS)
         ax.plot_surface(px,bx,grid,cmap='viridis',edgecolor='#46515a',linewidth=.6,alpha=.85)
-        ax.scatter(px.ravel(),bx.ravel(),grid.ravel(),c='black',s=14,depthshade=False)
-        ax.set(xlabel='Grid dimension P',ylabel='Input words / clock B',zlabel='Useful MACs / clock',title=f'N={n}',xticks=[2,4,8],yticks=[4,8,16])
-        ax.view_init(elev=26,azim=-132)
-        if i==2:ax.set_zlabel('')
-    fig.suptitle('Scaling landscape · mesh joins the nine measured configurations per workload',fontsize=12)
-    fig.savefig(output/'scaling_surface.png',dpi=170,bbox_inches='tight')
-    fig.savefig(output/'scaling_surface.svg',bbox_inches='tight',metadata={'Date':None});plt.close(fig)
+        ax.scatter(px.ravel(),bx.ravel(),grid.ravel(),c='black',s=18,depthshade=False)
+        ax.set(xlabel='PE grid dimension',ylabel='Input words / clock',zlabel='Useful MACs / clock' if index==1 else '',
+               title=f'{n}×{n} matrix workload',xticks=GRIDS,yticks=BUDGETS)
+        ax.set_xticklabels(['2×2','4×4','8×8']);ax.view_init(elev=26,azim=-132)
+    fig.suptitle('All 18 configurations · nine measured points per matrix workload',fontsize=14)
+    save(fig,'scaling_surface')
 
-    fig=plt.figure(figsize=(12,5.8))
-    fig.subplots_adjust(left=.01,right=.90,bottom=.07,top=.82,wspace=.12)
-    for k,t in enumerate(selected,1):
-        ax=fig.add_subplot(1,2,k,projection='3d')
-        first=np.full((8,8),np.nan);last=np.full((8,8),np.nan)
-        for cycle,f in enumerate(first_tile(t),1):
-            mask=int(f[4],16)
-            for i in range(64):
-                if mask>>(63-i)&1:
-                    r,c=divmod(i,8)
-                    if np.isnan(first[r,c]):first[r,c]=cycle
-                    last[r,c]=cycle
-        for values,color in ((first,'#377f9b'),(last,'#cf8b3c')):
-            ax.plot_surface(xx,yy,values,color=color,alpha=.75,edgecolor='#46515a',linewidth=.4)
-        axes_style(ax,'Tile clock',76)
-        ax.set_title(f'B={t["B"]}: first and last MAC at every PE',pad=14)
-    from matplotlib.patches import Patch
-    fig.legend(handles=[Patch(facecolor='#377f9b',label='First useful MAC'),Patch(facecolor='#cf8b3c',label='Last useful MAC')],
-               loc='lower center',ncol=2,frameon=False)
-    fig.suptitle('The execution window bends as operand supply slows',fontsize=13)
-    fig.savefig(output/'wavefront_surfaces.png',dpi=170,bbox_inches='tight')
-    fig.savefig(output/'wavefront_surfaces.svg',bbox_inches='tight',metadata={'Date':None});plt.close(fig)
-
-    # Shared elapsed tile clocks: a completed tile stays on screen while its peer finishes.
-    fig=plt.figure(figsize=(10,4.8))
-    fig.subplots_adjust(left=.01,right=.90,bottom=.08,top=.82,wspace=.12)
-    axes=[fig.add_subplot(1,2,i,projection='3d') for i in (1,2)]
-    def update(clock):
-        for ax,t in zip(axes,selected):
-            ax.clear();values,phase=counts_at(t,clock)
-            ax.plot_surface(xx,yy,values,cmap=cmap,norm=norm,edgecolor='#46515a',linewidth=.3)
-            axes_style(ax,'Useful MACs',16)
-            length=len(first_tile(t));state='COMPLETE' if clock>=length else ('STALL' if phase==2 else 'ADVANCE')
-            ax.set_title(f'B={t["B"]} · {min(clock,length)}/{length} clocks · {state}')
-        fig.suptitle('First output tile · completed tiles stay on screen',fontsize=12)
+    # Each chapter shows all three PE grids and both complete matrix workloads.
+    fig=plt.figure(figsize=(11,7.7))
+    fig.subplots_adjust(left=.025,right=.93,bottom=.04,top=.84,hspace=.33,wspace=.22)
+    axes={(n,p):fig.add_subplot(2,3,ni*3+pi+1,projection='3d')
+          for ni,n in enumerate(MATRICES) for pi,p in enumerate(GRIDS)}
+    chapter_frames=28
+    chapters=[(b,int(clock)) for b in BUDGETS for clock in np.linspace(1,max(by_key[(n,p,b)]['compute'] for n in MATRICES for p in GRIDS),chapter_frames)]
+    def update(frame):
+        b,clock=chapters[frame]
+        for (n,p),ax in axes.items():
+            ax.clear();t=by_key[(n,p,b)];local=min(clock,t['compute'])
+            xx,yy=np.meshgrid(np.arange(p),np.arange(p))
+            values=cumulative[(n,p,b)][local-1]/(n**3/(p*p))
+            ax.plot_surface(xx,yy,values,cmap=cmap,norm=norm,edgecolor='#424b54',linewidth=.35)
+            style(ax,p,1,'Assigned MAC work' if p==2 else '',True)
+            phase='COMPLETE' if clock>=t['compute'] else 'RUNNING'
+            ax.set_title(f'Grid {p}×{p} · matrix {n}×{n}\n{local}/{t["compute"]} clocks · {phase}',fontsize=10,pad=8)
+        fig.suptitle(f'All three arrays · both matrix workloads · input budget {b} words/clock\nShared elapsed compute clock: {clock}',fontsize=13,y=.97)
         return []
-    ani=animation.FuncAnimation(fig,update,frames=range(1,77),interval=100,repeat=False)
-    ani.save(output/'tile_story.gif',writer=animation.PillowWriter(fps=10),dpi=85)
+    movie=animation.FuncAnimation(fig,update,frames=len(chapters),interval=150,repeat=False)
+    movie.save(output/'tile_story.gif',writer=animation.PillowWriter(fps=7),dpi=80)
     plt.close(fig)
+    manifest={'configurations':[{'matrix_order':n,'grid_dimension':p,'input_budget':b,
+                                'compute_cycles':by_key[(n,p,b)]['compute']}
+                               for n in MATRICES for p in GRIDS for b in BUDGETS],
+              'activity_color':'MACs per PE per physical clock, averaged over four-clock bins',
+              'work_height':'fraction of a physical PE\'s full-product MAC assignment',
+              'work_snapshot_clock':32,'animation_budget_chapters':list(BUDGETS)}
+    (output/'coverage.json').write_text(json.dumps(manifest,indent=2)+'\n')

@@ -30,7 +30,8 @@ def render(rows, hardware, output):
                 selected = sorted((r for r in rows if r['N'] == n and r['B'] == b), key=lambda r:r['P'])
                 y = [r[field]*(100 if field == 'pe_utilization' else 1) for r in selected]
                 ax.plot([r['P'] for r in selected], y, marker='o', color=COLORS[b], label=f'B={b}')
-            ax.set(title=f'N={n}', xlabel='Grid dimension P', ylabel=ylabel, xticks=[2,4,8])
+            ax.set(title=f'{n}×{n} matrix workload', xlabel='PE grid dimension', ylabel=ylabel, xticks=[2,4,8])
+            ax.set_xticklabels(['2×2','4×4','8×8'])
             ax.grid(axis='y', alpha=.2)
             ax.legend(frameon=False)
         fig.suptitle(f'{title} · modeled input budget B in combined words/clock')
@@ -49,8 +50,8 @@ def render(rows, hardware, output):
             values = [r[field] for r in selected]
             ax.bar(range(len(selected)), values, bottom=bottom, label=label, color=color)
             bottom = [a+b for a,b in zip(bottom, values)]
-        ax.set(title=f'N={n}', ylabel='Compute clocks', xlabel='P / B')
-        ax.set_xticks(range(len(selected)), [f"{r['P']}/{r['B']}" for r in selected], rotation=45)
+        ax.set(title=f'{n}×{n} matrix workload', ylabel='Compute clocks', xlabel='PE grid / input words per clock')
+        ax.set_xticks(range(len(selected)), [f"{r['P']}×{r['P']} / {r['B']}" for r in selected], rotation=45)
         ax.grid(axis='y', alpha=.15)
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc='outside lower center', ncol=4, frameon=False)

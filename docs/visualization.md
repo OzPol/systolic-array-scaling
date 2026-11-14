@@ -7,15 +7,15 @@ The PE grid has a natural geometry: row, column, and time. These views connect t
 | View | Coordinates / encoding | What it explains |
 |---|---|---|
 | PE topology replay | Row and column; active cells perform a MAC; numbers count completed MACs in the current tile | Operand skew, the moving activity front, stalls, and tile boundaries |
-| Work surface | PE row, PE column, completed useful MACs | How work spreads across the grid and how input stalls slow its growth |
+| Work surface | PE row, PE column, fraction of each PE’s full-product MAC work completed | Progress after the same 32 physical clocks, across every configuration |
 | First/last-MAC surfaces | PE row, PE column, clock of each PE's first and last MAC | Where execution begins and ends, and how restricted supply bends/stretches that window |
-| Space–time point cloud | PE row, PE column, physical tile clock; one point per MAC | The same amount of work stretches across more clocks when staging holds the grid |
+| Space–time point cloud | PE row, PE column, physical tile clock; MAC rate on orthogonal volume slices | How PE activity changes across space and physical compute time |
 | Scaling surface | Grid size, input budget, measured useful MACs/clock | The combined effect of adding compute capacity and supplying operands |
-| First-tile animation | Synchronized elapsed clocks for B=16 and B=4 | A direct visual comparison: one tile completes in 31 versus 76 clocks |
+| Full-product animation | All PE grids and both matrix workloads on a shared clock | Completion across every grid, matrix, and budget |
 
-The animated comparison follows the first output tile of the P=8/N=16 workload. A completed tile stays on screen while its peer finishes. All configurations use the same arithmetic and complete matrix products; the replay selects the principal fixed-seed test case.
+The overview includes all 18 configurations: rows group the 2×2, 4×4, and 8×8 PE grids for each matrix workload, and columns show input budgets of 4, 8, and 16 words per clock. Separate nine-panel sheets cover 8×8 and 16×16 matrices. The animation shows all three grids and both complete matrix products, with one chapter per input budget.
 
-The work and wavefront surfaces join the discrete PE samples with mesh faces. The scaling surface joins discrete measured configurations. Their coordinates and values come from the trace or summary tables.
+The volume slices color each PE by MACs per physical clock averaged over four-clock bins. The work and wavefront surfaces join the discrete PE samples with mesh faces. The scaling surface joins discrete measured configurations. Their coordinates and values come from the trace or summary tables.
 
 ## Open or regenerate
 

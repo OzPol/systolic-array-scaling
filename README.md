@@ -160,9 +160,11 @@ The [offline replay](results/visualization/replay.html) lets you select a config
 
 Open `results/visualization/replay.html` in your browser after cloning. It works offline. The 3D views rotate by dragging.
 
-![Completed work after sixteen clocks](results/visualization/work_surface.png)
+![All nine configurations for 8×8 matrices](results/visualization/activity_matrix08.png)
 
-![First-tile simulation comparison](results/visualization/tile_story.gif)
+![All nine configurations for 16×16 matrices](results/visualization/activity_matrix16.png)
+
+![All arrays and matrix workloads](results/visualization/tile_story.gif)
 
 To regenerate everything from a fresh simulation:
 
@@ -173,7 +175,7 @@ python -m analysis.replay --trace-dir results/raw/traces --output results/raw/vi
 
 `make check` also builds these visualizations. The replay uses the fixed-seed performance case (case 5) from each configuration. Trace validation checks every MAC event, tile completion, and stall before generating the views.
 
-The geometry has a direct meaning: surface height is completed work, the two wavefront surfaces mark each PE's first/last MAC, and the space–time gaps are grid stalls. The scaling surface joins the nine measured P/B configurations for each matrix size.
+The overview displays all 18 configurations. Volume slices show PE activity over physical time; work-surface height shows progress through the complete product; the wavefront surfaces mark each PE’s first and last MAC. The scaling surface joins the nine measured P/B configurations for each matrix size.
 
 Questa and Vivado also provide their own waveform and design-inspection GUIs. See [visualization notes](docs/visualization.md) for those views and the story behind the generated figures.
 
