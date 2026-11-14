@@ -2,7 +2,7 @@
 
 ## The big picture
 
-We are building a **small matrix-multiplication circuit** and asking an architecture question:
+We built a **small matrix-multiplication circuit** to answer an architecture question:
 
 > If we add more arithmetic units, do we get a worthwhile speedup when the circuit can receive only a limited number of input values per cycle?
 
@@ -15,7 +15,7 @@ A useful computer organization analogy is a CPU with more execution units. Those
 Matrix multiplication computes each output as a series of **multiply-and-accumulate operations** (MACs):
 
 $$
-C[i,j]=\sum_{k=0}^{N-1}A[i,k]B[k,j].
+C[i,j] = \sum_{k=0}^{N-1} A[i,k]B[k,j], \qquad 0 \le i,j < N.
 $$
 
 For example, if the first row of $A$ is $[1,2]$ and the first column of $B$ is $[5,7]$, then $C[0,0]=1(5)+2(7)=19$.
@@ -42,7 +42,7 @@ flowchart TB
 
 ## Zoom out: what we build
 
-We will implement **one VHDL design** that can generate three grid sizes: **2×2, 4×4, and 8×8**. It includes the PEs, input staging, valid/stall control, a controller for output tiles, and serial result readout. We will also build a testbench that compares every finished matrix against an independent software calculation.
+We implemented **one VHDL design** that generates three grid sizes: **2×2, 4×4, and 8×8**. It includes the PEs, input staging, valid/stall control, a controller for output tiles, and serial result readout. The testbench compares every finished matrix against an independent software calculation.
 
 Tiling is essential. A 2×2 grid cannot hold a whole 16×16 output, so it computes one 2×2 piece at a time. **Each piece still needs the full 16-element inner dimension**; then the controller saves it and starts the next piece.
 
@@ -58,16 +58,13 @@ The controller’s job is approximately this (conceptual pseudocode, not VHDL):
 ```cpp
 for (int row = 0; row < N; row += P)
   for (int col = 0; col < N; col += P) {
-    clear_PE_accumulators();
-
-    for (int k = 0; k < N; ++k) {
-      stage_matching_A_and_B_operands(row, col, k, budget_words);
+    for (int step = 0; step < N + 2 * P - 2; ++step) {
+      stage_requested_boundary_words(row, col, step, budget_words);
       hold_grid_until_boundary_step_is_ready();
       advance_grid_one_step();
     }
 
-    finish_in_flight_results();
-    store_output_tile(row, col);
+    capture_output_tile_and_clear_grid(row, col);
   }
 ```
 
@@ -106,8 +103,10 @@ That **does not mean** the 8×8 grid has no advantage. It has 64 PEs, so it may 
 
 The project guidelines explicitly include **systolic-array grid scaling versus input-bandwidth limits** as a suggested domain-acceleration topic. They prefer gem5 but allow a justified HDL prototype. VHDL is appropriate here because the question depends on the **actual placement of arithmetic units, cycle-by-cycle data movement, and correct stall behavior**. Questa tests those behaviors; Vivado estimates the implementation cost on the KV260 FPGA target. The proposal does **not** require buying or programming a board.
 
-## What conclusion would count?
+## What the completed study found
 
-We are trying to identify **where additional PEs stop giving proportional benefit for these workloads and input budgets**, and what the extra hardware costs. A strong result might find that the 8×8 grid is fastest in cycles but less efficient per DSP under an eight-word budget. Another valid result might find that tile fill and drain matter more than the input limit for the 8×8 workload. Either result answers the question if the matrices are correct and comparisons are consistent.
+For N=16/B=16, the three grids take 1216, 368, and 124 compute clocks. All three routed implementations meet the constrained internal 10 ns target, using 4, 16, and 64 DSPs. The 8×8 is fastest in every tested case, while useful throughput per DSP falls as the grid grows. Input-budget stalls and finite-workload fill/drain overhead explain the sublinear scaling.
 
-The boundary is important: this experiment **does not measure actual KV260 DRAM bandwidth, CPU-versus-accelerator speedup, or power consumption**. The numbers in our draft presentation are illustrative examples; the VHDL simulations and Vivado reports will determine the findings.
+The findings and figures use actual simulation and Vivado records. See the [measured analysis](../results/analysis/report.md), [report PDF](../deliverables/report/main.pdf), and [submitted proposal](eel5764_systolic_array_project_proposal.pdf).
+
+The experiment does not measure actual KV260 DRAM bandwidth, CPU-versus-accelerator speedup, or power consumption. The mathematical definition, tile-origin convention, and physical-versus-enabled clock distinction are documented in [architecture.md](architecture.md).

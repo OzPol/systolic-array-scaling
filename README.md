@@ -11,12 +11,29 @@ The question is how input supply, finite workloads, and tile overhead limit the 
 - Thomas Martin's implementation and original results were merged separately in [PR #1](https://github.com/OzPol/systolic-array-scaling/pull/1). His original commits and authorship are preserved.
 - The original Questa sweep records **144 passing cases**. An independent GHDL sweep also passes all 144, with full 36-bit output comparison and independent interface-clock checks.
 - Directed RTL regressions cover the PE, input stager, and agreement between instrumented and synthesis-mode datapaths. Python tests reject incomplete, duplicate, failed, and inconsistent measurements.
-- The measured **P=2, N=16** Vivado implementation uses **7,260 LUTs, 9,437 FFs, 4 DSPs, 0 BRAM**, with **+3.955 ns internal slack** at a 10 ns constraint.
-- **Next: run P=4 and P=8 in Vivado**, then update the FPGA comparison. The proposed study uses simulation and FPGA implementation reports.
+- Thomas's remaining Vivado results were merged in [PR #3](https://github.com/OzPol/systolic-array-scaling/pull/3). **All three grids meet the constrained internal 10 ns target**; all simulation and FPGA runs for the planned study are complete.
+
+| PE grid | LUTs | Flip-flops | DSPs | BRAM tiles | Internal WNS |
+|---|---:|---:|---:|---:|---:|
+| 2×2 | 7,260 | 9,437 | 4 | 0 | +3.955 ns |
+| 4×4 | 11,488 | 9,505 | 16 | 0 | +3.786 ns |
+| 8×8 | 8,166 | 10,211 | 64 | 0 | +2.176 ns |
+
+These are post-route N=16 reports from Vivado 2025.2.1 on the same K26 part with `INSTR=false`. External I/O delays are unspecified; this is internal timing evidence, not a board measurement.
 
 At N=16/B=16, compute cycles are 1216 / 368 / 124. At N=16/P=8/B=4, 180 budget stalls increase compute latency to 304 clocks. Larger arrays still help in every tested case; the measurements show reduced scaling efficiency rather than a complete loss of scaling benefit.
 
-Start with the [analysis](results/analysis/report.md), [contribution review](docs/review.md), and [remaining steps](docs/completion.md).
+Start with the [analysis](results/analysis/report.md), [contribution review](docs/review.md), and [submission checklist](docs/completion.md).
+
+## Project documents
+
+- [Final report PDF](deliverables/report/main.pdf) and [editable LaTeX source](deliverables/report/main.tex).
+- [Submitted project proposal PDF](docs/eel5764_systolic_array_project_proposal.pdf).
+- [Course project guidelines PDF](docs/eel5764_project_guidelines_fall_2026.pdf).
+- [Architecture and mathematical definitions](docs/architecture.md).
+- [Video storyboard and narration](deliverables/video/outline.md).
+
+PDF links open GitHub's document viewer, which also offers a download button. The HTML replay must be downloaded or opened from a local checkout to run.
 
 ## Quick start: Windows with WSL2
 
@@ -34,7 +51,7 @@ sudo apt-get install -y git
 ```
 
 ```bash
-git clone --branch oz-finish-systolic-study https://github.com/OzPol/systolic-array-scaling.git
+git clone https://github.com/OzPol/systolic-array-scaling.git
 cd systolic-array-scaling
 ```
 
@@ -52,7 +69,7 @@ make check
 
 Expected final output includes three `PASS: tb_...` component tests, 18 `TB PASS ... cases=8` lines, `PASS: 144 cases`, and `Validated 18 configurations`. Any failed check returns a nonzero exit status and stops the workflow.
 
-`oz-finish-systolic-study` is the completion branch. After it is merged, replace that branch name with `main` when cloning.
+The completed implementation and measured FPGA evidence are on `main`.
 
 ## Linux and macOS
 
@@ -123,24 +140,15 @@ python -m analysis.report --simulation results/raw/questa_sim_results.csv --outp
 
 The shell wrappers in `scripts/questa/` call this runner. The original run used QuestaSim 2026.2. Use the updated commands in the team’s licensed environment. [Tool setup and troubleshooting](docs/setup.md) covers PATH, versions, environment variables, and expected outputs.
 
-### Vivado: remaining FPGA runs
+### Vivado: reproduce the completed FPGA runs
 
-Open a Vivado-configured command shell, or source the installed Linux `settings64.sh`. From the repo root:
-
-```bash
-python scripts/vivado/run.py --p 4 8 --n 16
-```
-
-The runner executes **one configuration at a time**. Do not start parallel copies. It uses `xck26-sfvc784-2LV-c`, a 10 ns clock, `INSTR=false`, and out-of-context synth/opt/place/route. It retains reports, console output, source hashes, and completion state under `results/raw/vivado_p<P>_n16/`.
-
-Collect completed runs while preserving the existing P=2 evidence, then refresh plots:
+The reviewed reports for P=2,4,8 are already committed under [results/vivado/](results/vivado/); Vivado is only needed to repeat implementation. To refresh plots from the committed evidence, run:
 
 ```bash
-python scripts/collect_vivado.py
-python -m analysis.report
+python -m analysis.report --simulation results/verification/ghdl_sim_results.csv
 ```
 
-For a clean rerun of every size using the current RTL, use a fresh destination:
+For an optional rerun, open a Vivado-configured command shell or source the installed Linux `settings64.sh`. From the repo root, choose a fresh destination:
 
 ```bash
 python scripts/vivado/run.py --p 2 4 8 --n 16 --output-root results/raw/current_rtl
@@ -148,7 +156,7 @@ python scripts/collect_vivado.py --source results/raw/current_rtl
 python -m analysis.report
 ```
 
-`--resume` skips completed runs only when source hashes match. Incomplete/mismatched existing directories require a fresh `--output-root`; the runner does not delete old evidence. Vivado and its license/device support must be installed separately. [Completion steps](docs/completion.md) explains what to inspect and commit after each run.
+The runner executes one configuration at a time using `xck26-sfvc784-2LV-c`, a 10 ns clock, `INSTR=false`, and out-of-context synth/opt/place/route. Do not launch parallel copies. `--resume` skips completed runs only when source hashes match. Incomplete/mismatched existing directories require a fresh `--output-root`; the runner does not delete old evidence. Vivado and its license/device support must be installed separately. See [tool setup](docs/setup.md) for report checks.
 
 ## Watch the simulation
 
@@ -205,8 +213,8 @@ Vivado is intentionally separate from hosted PR CI. GitHub-hosted runners do not
 | [docs/configurations.csv](docs/configurations.csv) | The 18 architectural configurations |
 | [docs/setup.md](docs/setup.md) | Tool-specific setup and troubleshooting |
 | [docs/review.md](docs/review.md) | Contribution assessment and technical findings |
-| [docs/completion.md](docs/completion.md) | Remaining work, ordered steps, deliverable gates |
-| [deliverables/](deliverables/) | Proposal, report source, video outline |
+| [docs/completion.md](docs/completion.md) | Completed experiment evidence and remaining submission tasks |
+| [deliverables/](deliverables/) | Proposal navigation, report PDF/source, video outline |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branches, commit scope, tests, evidence requirements |
 
 ## Team

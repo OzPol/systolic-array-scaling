@@ -1,92 +1,44 @@
-# Completion checklist and remaining steps
+# Completion and submission checklist
 
-Simulation, analysis, replay, CI, and setup documentation are ready. Next are the P=4/P=8 Vivado runs, followed by the final report and video.
+The implementation, all 144 simulation cases, and all three Vivado runs are complete. The refreshed analysis and IEEE report cover the full planned study. No additional FPGA experiment is required for this scope.
 
-## Completed in the separate follow-up branch
+## Completed evidence
 
-- [x] Merge Thomas's existing branch separately and preserve attribution.
-- [x] Review implementation, commit history, original logs, and report numbers.
-- [x] Rerun all 144 full-matrix cases independently in GHDL.
-- [x] Fix simulator error propagation and vector checksum reproducibility.
-- [x] Add direct PE/stager tests and INSTR=false datapath regression.
-- [x] Check interface-clock counts independently of DUT counters.
-- [x] Add strict analysis, cycle decomposition, and PNG/SVG plots.
-- [x] Prepare sequential Vivado execution, report collection, and provenance.
-- [x] Document WSL/Linux setup, pinned packages, commands, and troubleshooting.
-- [x] Add PR-triggered CI and downloadable measurement/log/plot artifacts.
-- [x] Provide a report source draft and five-minute video outline.
+- [x] Merge Thomas's baseline in PR #1, Oz's follow-up in PR #2, and Thomas's larger-grid Vivado results in PR #3, retaining original commits and authorship.
+- [x] Verify all 18 grid/matrix/budget configurations and eight full-width cases per configuration.
+- [x] Check vector hashes, independent clock counts, PE/stager behavior, and synthesis-mode datapath agreement.
+- [x] Retain original simulation evidence, routed reports, and console logs.
+- [x] Confirm identical Vivado version, part, 10 ns constraint, INSTR=false, and implementation flow for P=2/4/8.
+- [x] Check every hardware CSV value against the actual reports, including setup/hold timing and unconstrained-path scope.
+- [x] Regenerate latency, utilization, cycle accounting, FPGA resources, and throughput-versus-DSP figures.
+- [x] Update the manuscript's hardware tables, abstract, findings, and conclusions; compile and visually review the IEEE PDF.
+- [x] Update the README, document navigation, mathematical definitions, and video narration with the completed evidence.
 
-## Remaining, in execution order
+## Remaining submission tasks
 
-| Step | Action | Completion evidence | Suggested commit boundary |
-|---|---|---|---|
-| 1 | On a Vivado machine, fetch this branch and check `git status` | Correct branch/commit; clean source | No new commit needed |
-| 2 | Confirm the Vivado version, K26 support, and license | `vivado -version`; successful device initialization | Record changed tool settings only if necessary |
-| 3 | Run P=4/N=16 using the wrapper | Completed `run.json`, full console, synth/route utilization and timing reports | `Record 4x4 Vivado implementation results` |
-| 4 | Review warnings, WNS/TNS/hold/unconstrained paths and collect P=4 reports | Actual measured LUT/FF/DSP/BRAM plus scoped timing conclusion | Same P=4 evidence commit |
-| 5 | Run P=8/N=16, sequentially | Same completion evidence | `Record 8x8 Vivado implementation results` |
-| 6 | Review/collect P=8 and regenerate analysis | All three measured FPGA configurations in `summary_vivado.csv` | Same P=8 evidence commit, or separate plot update |
-| 7 | If the source/tool/settings differ materially, rerun P=2/4/8 from one clean revision | Comparable source hashes and flow settings | One evidence commit per configuration |
-| 8 | Review final hardware scaling and throughput/DSP conclusions | No missing hardware rows; claims match reports | `Finalize hardware scaling analysis` |
-| 9 | Compile and review the IEEE report source, replace explicit pending hardware entries, update conclusions | Rendered double-column PDF with final real measurements | `Finalize project report` |
-| 10 | Update the presentation with the measured figures and record the five-minute video | Playable recording near the required duration | `Finalize presentation and video notes` (keep bulky video outside git) |
-| 11 | Review and merge PR #2 after CI succeeds | Main contains the follow-up commits separately from PR #1 | Merge with history retained |
-| 12 | Submit one video and final report per group; complete peer Q&A | Canvas submission confirmations | No repository commit needed |
+| Task | Completion evidence |
+|---|---|
+| Team review of the refreshed report | Review the [PDF](../deliverables/report/main.pdf), author list, and claims before submission |
+| Record the five-minute video | Use the [storyboard and narration](../deliverables/video/outline.md), latest plots, and measured hardware table; review legibility, audio, and duration |
+| Upload the group deliverables | One video and one final report per group, following Canvas instructions |
+| Complete peer Q&A | Participate in the assigned November 19–20 discussion |
 
-## Concrete Vivado commands
+A final team review and a completed recording cannot be inferred from repository files. The checked-in narration is a script, not a recorded video.
 
-From a configured tool shell at the repository root:
+## Reproduce the completed analysis
+
+After activating the Python environment, from the repository root:
 
 ```bash
-git fetch origin
-git switch oz-finish-systolic-study
-git pull --ff-only
-git status --short
-vivado -version
+make check
+python -m analysis.report --simulation results/verification/ghdl_sim_results.csv
 ```
 
-Run/collect P=4 first:
+The first command makes a fresh 144-case GHDL sweep and temporary analysis/replay. The second reproduces the reviewed figures from the committed independent GHDL evidence and all three measured Vivado rows. Both validate every configuration. See [report build instructions](../deliverables/report/README.md) to compile the PDF.
 
-```bash
-python scripts/vivado/run.py --p 4 --n 16
-python scripts/collect_vivado.py
-python -m analysis.report
-```
+The existing Vivado runs were produced before PR #2's analysis follow-up. Its only RTL change is a reset/clear mask on an activity signal unused with INSTR=false. The datapath, controller, stager, clock constraint, part, tool version, and implementation flow match. The imported FPGA evidence remains valid for this comparison; it is not relabeled as a new run on the final commit. Exact source hashes and a clean-worktree run manifest were not recorded by the original flow.
 
-Inspect the actual reports before staging the evidence:
-
-```bash
-git status --short
-git add results/vivado/p4_n16 results/summary_vivado.csv results/analysis
-git diff --cached --stat
-git commit -m "Record 4x4 Vivado implementation results"
-```
-
-Then P=8:
-
-```bash
-python scripts/vivado/run.py --p 8 --n 16
-python scripts/collect_vivado.py
-python -m analysis.report
-```
-
-```bash
-git add results/vivado/p8_n16 results/summary_vivado.csv results/analysis
-git diff --cached --stat
-git commit -m "Record 8x8 Vivado implementation results"
-```
-
-If a raw output folder already exists, use `--resume` only for an unchanged completed run, or choose a fresh `--output-root`. Do not delete prior evidence merely to make a rerun fit the default path.
-
-For a comparable clean-current-source rerun of all sizes:
-
-```bash
-python scripts/vivado/run.py --p 2 4 8 --n 16 --output-root results/raw/current_rtl
-python scripts/collect_vivado.py --source results/raw/current_rtl
-python -m analysis.report
-```
-
-Re-run `make check` after any RTL or measurement-boundary change. Timing failure is a valid finding; do not alter the target solely to make an individual design appear successful without rerunning comparable configurations.
+For an intentional future RTL or constraint change, use a fresh output directory and rerun all three comparable implementations. The README retains the optional Vivado commands. Preserve earlier reviewed evidence.
 
 ## Course dates and requirements
 
@@ -98,8 +50,8 @@ Source: the repository's [course guidelines PDF](eel5764_project_guidelines_fall
 | Peer Q&A | November 19–20, 2026 | Asynchronous discussion participation |
 | Final written report | December 1, 2026, 11:59 PM | IEEE double-column conference-style paper |
 
-The guideline specifies one submission per group. The supplied video requirement does not say every member must narrate; the team may divide presentation duties, while checking Canvas for any newer instructor instructions. Use the video outline and final figures to prepare the recording, then submit through Canvas.
+The guideline specifies one submission per group. It does not require every member to narrate the video. Check Canvas for newer instructor instructions before submitting.
 
-## Optional work after the committed scope
+## Optional extensions
 
-BRAM-friendly output storage, buffered/overlapped boundary steps, larger workloads, alternate dataflows, a physical-board run, measured DRAM supply, and CPU comparisons are extensions. None is needed to finish the current proposed study. Implementing an extension changes what is measured and should have its own feature/tests/experiment commits.
+BRAM-friendly output storage, overlapping boundary steps, larger workloads, alternate dataflows, physical-board runs, measured DRAM supply, power, and CPU comparisons are future work. They are not required to finish the current study and would need separate implementation and comparable measurements.

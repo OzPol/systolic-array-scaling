@@ -30,13 +30,13 @@ The input limit has a measurable cost. On the 8-by-8 grid, an eight-word budget 
 
 Input supply is not the only source of lost utilization. At full supply, the order-sixteen product on the 8-by-8 has sixty-four useful-equivalent clocks, fifty-six fill-and-drain clocks, and four capture clocks. This is capacity-normalized accounting, not a claim that no useful MACs occur during filling and draining. Serial readout also matters: for the smallest fully supplied product, it adds sixty-four clocks to twenty-three compute clocks.
 
-The available 2-by-2 FPGA implementation uses four DSPs, 7260 LUTs, and 9437 flip-flops, with zero block RAM. Most storage bits hold the complete result matrix. Its constrained internal paths have positive slack at ten nanoseconds. This timing result covers the constrained internal paths.
+All three FPGA implementations meet the constrained internal ten-nanosecond target. The 2-by-2, 4-by-4, and 8-by-8 use four, sixteen, and sixty-four DSPs, with positive setup slack of 3.955, 3.786, and 2.176 nanoseconds. All use zero block RAM; the complete result matrix is stored in registers. At full supply, useful throughput per DSP falls from 0.842 to 0.696 to 0.516 MACs per clock. The 8-by-8 gives the shortest compute latency, while the 2-by-2 uses its arithmetic resources most efficiently for these workloads. LUT use is not monotonic, so we report the measured implementation counts directly. Timing covers constrained internal paths; board I/O delays are not specified.
 
-Our conclusion is that adding processing elements helps in every tested configuration, but input supply and finite-workload overhead reduce scaling efficiency. The larger arrays remain faster throughout this sweep. The reproducible scripts, checked measurements, and automated PR tests make the remaining hardware comparison straightforward to extend.
+Our conclusion is that adding processing elements helps in every tested configuration, but input supply and finite-workload overhead reduce scaling efficiency. The larger arrays remain faster throughout this sweep. All three measured hardware configurations are included in the resource and throughput comparison.
 
 ## Before recording
 
-- Update the FPGA segment after the P=4/P=8 runs finish.
+- Use the completed P=2/P=4/P=8 FPGA table and the refreshed throughput-per-DSP figures.
 - Use the latest figures from the analysis module.
 - Rehearse and trim to five minutes; the draft timing is an allocation, not a measured recording duration.
 - Show the architecture and findings. Reading terminal output alone does not communicate the architectural result.

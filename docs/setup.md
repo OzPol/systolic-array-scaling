@@ -9,7 +9,7 @@ The [README](../README.md) contains the complete first-run path. Use Linux/WSL2 
 | Python | Clean Python 3.12 environment installed from `requirements.txt` and passed the open-source workflow |
 | GHDL | Independent rerun: GHDL 5.0.1, Debian mcode/GNAT 14.2.0; CI installs the Ubuntu 24.04 package and records its actual version |
 | Questa | Original Thomas run: Questa Sim-64 2026.2 win64 May 18 2026; `vcom -2008` / `vsim -c` |
-| Vivado | Original Thomas run: 2025.2.1, SW Build 6403652, Windows; current environment has no Vivado |
+| Vivado | All three Thomas runs: 2025.2.1, SW Build 6403652, Windows; Vivado is unnecessary to regenerate the committed analysis |
 | Vivado part | `xck26-sfvc784-2LV-c` (KV260 SOM target) |
 | Flow | Out-of-context synth, opt, place, route; one thread; default directives; no board programming |
 | Arithmetic and RTL | VHDL-2008; signed 16-bit input, 36-bit exact result; N≤16 |
@@ -77,7 +77,7 @@ vivado -mode batch -nojournal -nolog -source scripts/vivado/synth.tcl -tclargs 4
 
 The Python wrapper is preferred because it retains console logs, records hashes, and requires a completion marker plus all four core utilization/timing reports. It also retains routed checkpoints for later inspection; checkpoints stay in ignored raw directories.
 
-After a run, inspect:
+For a future run through the current wrapper, inspect (the original committed runs predate the extra diagnostic files and run manifest):
 
 1. `console.txt`: synthesis, optimization, placement, and routing completed without errors.
 2. `util_impl.rpt`: post-route LUTs, FFs, DSPs, BRAM.
@@ -85,7 +85,7 @@ After a run, inspect:
 4. `check_timing_impl.rpt`, `drc_impl.rpt`, `methodology_impl.rpt`: remaining violations and warnings.
 5. `run.json`: source hash/commit, correct P/N/part, and `completed=true`.
 
-The P=2 timing report gives +3.955 ns WNS for the constrained internal paths. The current OOC setup leaves external input/output delays unspecified; board I/O timing would be a separate implementation step.
+The P=2/4/8 post-route reports give +3.955/+3.786/+2.176 ns WNS for the constrained internal paths. The current OOC setup leaves external input/output delays unspecified; board I/O timing would be a separate implementation step.
 
 ## Troubleshooting
 

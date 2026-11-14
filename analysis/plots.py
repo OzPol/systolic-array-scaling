@@ -16,8 +16,11 @@ def render(rows, hardware, output):
 
     def save(fig, name):
         for ext in ('png', 'svg'):
-            fig.savefig(output/f'{name}.{ext}', dpi=180, bbox_inches='tight',
+            path = output/f'{name}.{ext}'
+            fig.savefig(path, dpi=180, bbox_inches='tight',
                         metadata={'Date': None} if ext == 'svg' else None)
+            if ext == 'svg':
+                path.write_text('\n'.join(line.rstrip() for line in path.read_text().splitlines())+'\n')
         plt.close(fig)
 
     for field, title, ylabel, name in (
@@ -58,20 +61,40 @@ def render(rows, hardware, output):
     fig.suptitle('Capacity-normalized cycle accounting; useful MACs overlap fill/drain')
     save(fig, 'cycle_breakdown')
 
-    fig, ax = plt.subplots(figsize=(7, 4), layout='constrained')
-    for hw in hardware:
-        n, p = int(hw['N']), int(hw['P'])
-        dsps = int(hw['impl_dsps'])
-        for b in (4, 8, 16):
+    fig, ax = plt.subplots(figsize=(5.3, 3.6), layout='constrained')
+    selected_hardware = sorted((hw for hw in hardware if int(hw['N']) == 16), key=lambda hw:int(hw['P']))
+    for b in (4, 8, 16):
+        points = []
+        for hw in selected_hardware:
+            n, p, dsps = int(hw['N']), int(hw['P']), int(hw['impl_dsps'])
             r = next((r for r in rows if (r['N'],r['P'],r['B']) == (n,p,b)), None)
             if r:
-                ax.scatter(dsps, r['macs_per_cycle'], color=COLORS[b], label=f'N={n}, P={p}, B={b}', s=75)
-    count = len({(r['N'],r['P']) for r in hardware})
-    ax.set(title=f'Throughput versus measured DSP use · {count}/3 N=16 designs available',
+                points.append((dsps, r['macs_per_cycle']))
+        if points:
+            ax.plot([x for x,y in points], [y for x,y in points], marker='o', color=COLORS[b], label=f'B={b} words/clock')
+    count = len(selected_hardware)
+    ax.set(title=f'Throughput versus measured DSP use\nN=16 · {count}/3 measured grid implementations',
            xlabel='DSPs from post-route report', ylabel='Useful MACs / simulated compute clock')
-    if hardware:
+    if selected_hardware:
+        ax.set_xticks([int(hw['impl_dsps']) for hw in selected_hardware],
+                     [f"{hw['impl_dsps']} DSPs\n{hw['P']}×{hw['P']} grid" for hw in selected_hardware])
         ax.legend(frameon=False, loc='upper left')
     else:
         ax.text(.5,.5,'Awaiting measured DSP counts',ha='center',va='center',transform=ax.transAxes)
     ax.grid(alpha=.2)
     save(fig, 'throughput_vs_dsp')
+
+    fig, axes = plt.subplots(2, 2, figsize=(8, 5.5), layout='constrained')
+    for ax, (field, label) in zip(axes.flat, (
+        ('impl_luts','LUTs'), ('impl_ffs','Flip-flops'),
+        ('impl_dsps','DSPs'), ('impl_bram_tiles','BRAM tiles'),
+    )):
+        values = [float(hw[field]) for hw in selected_hardware]
+        bars = ax.bar(range(len(values)), values, color='#35749c', width=.55)
+        ax.bar_label(bars, labels=[f'{v:,.0f}' if v.is_integer() else f'{v:g}' for v in values], padding=3)
+        ax.set(title=label, ylabel='Post-route count', xticks=range(len(values)))
+        ax.set_xticklabels([f"{hw['P']}×{hw['P']}" for hw in selected_hardware])
+        ax.set_ylim(0, max(values, default=0)*1.22 or 1)
+        ax.grid(axis='y', alpha=.15)
+    fig.suptitle('Measured FPGA resources · N=16 · same 10 ns internal clock target')
+    save(fig, 'fpga_resources')

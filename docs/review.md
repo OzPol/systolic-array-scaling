@@ -2,13 +2,14 @@
 
 ## Baseline attribution
 
-Thomas Martin's branch was merged **before** Oz's follow-up work, through [PR #1](https://github.com/OzPol/systolic-array-scaling/pull/1), merge `86bbfb9`. The original commits retain their hashes and author. Follow-up commits are on `oz-finish-systolic-study`, reviewed separately in PR #2.
+Thomas Martin's branch was merged **before** Oz's follow-up work, through [PR #1](https://github.com/OzPol/systolic-array-scaling/pull/1), merge `86bbfb9`. The original commits retain their hashes and author. Follow-up commits were merged separately in [PR #2](https://github.com/OzPol/systolic-array-scaling/pull/2). Thomas's remaining P=4/P=8 evidence was retained in [PR #3](https://github.com/OzPol/systolic-array-scaling/pull/3).
 
 | Commit | Author | Substantive contribution |
 |---|---|---|
 | `2269d2c` | Thomas Martin | Documentation links, generated-file exclusions, tool/board records, project PDFs |
 | `3459a9f` | Thomas Martin | Shared VHDL package; PE; generated array; budget stager; tiled controller/result storage/readout; Python reference/vector generation; self-checking testbench; simulator and Vivado scripts; 144 recorded passing cases; P=2 post-route reports |
 | `d771fc7` | Thomas Martin | Explanatory RTL/testbench comments, with the recorded Claude co-author retained |
+| `fcf8247`, `87b297d` | Thomas Martin | Completed P=4/N=16 and P=8/N=16 synthesis and post-route utilization/timing reports and logs |
 | Earlier main-branch commits | Ozlem Polat | Project definition, architectural specification, experiment plan, 18-row configuration matrix, proposal/project documentation |
 
 **Assessment:** Thomas's contribution is substantial. It provides most of the executable baseline implementation and original measurement pipeline, not a cosmetic addition or isolated helper. His November 10 message accurately describes the branch contents and the remaining P=4/P=8 Vivado work. The second November commit is primarily explanatory comments; the first contains the substantive implementation.
@@ -24,7 +25,7 @@ Most added lines are vectors, logs, and reports, so line counts would overstate 
 - Output words are checked against the Python reference at full width; N³ useful MACs and counter formulas are checked.
 - Additional observations check transaction clocks independently of the DUT counters.
 - Directed regressions cover PE reset/clear/hold/valid behavior, sparse/full/empty staging steps, partial-step reset, and INSTR=false/true datapath agreement.
-- The existing P=2 Vivado report parses to 7,260 LUTs, 9,437 FFs, four DSPs, zero BRAM, and +3.955 ns internal WNS.
+- All three Vivado result rows match direct parsing of their synthesis and routed reports. P=2/4/8 use 4/16/64 DSPs, zero BRAM, and have +3.955/+3.786/+2.176 ns internal WNS.
 
 ## Findings and disposition
 
@@ -36,7 +37,7 @@ Most added lines are vectors, logs, and reports, so line counts would overstate 
 | Counters were compared mainly with formulas | Counter and schedule errors needed an additional independent observation | Added interface-clock observations |
 | Old summarizer accepted incomplete configuration sets and rewrote summaries | Partial runs could produce misleading reviewed tables | Routed summarization through strict completeness/integrity validation; preserved original evidence |
 | README/setup/architecture still described implementation as planned | Users could not reproduce the existing code reliably | Updated interfaces, clock conventions, setup, commands, troubleshooting, CI, and completion gates |
-| Only P=2 has a routed FPGA result | Hardware scaling and throughput/DSP comparisons remain incomplete | Sequential runner and report collector are ready; P=4/P=8 remain pending |
+| Initial evidence covered only P=2 | Hardware cost comparison required the larger grids | Resolved: Thomas's P=4/P=8 runs are merged, reports match the CSV, and all three meet the same constrained internal target |
 | External input/output delays are absent in the original OOC timing report | Positive WNS covers constrained internal timing, not board I/O timing | Keep internal timing and board-level timing separate |
 | P=2 result RAM maps to registers | N=16 result store accounts for 9,216 bits and much of the FF cost | Retain measured mapping; memory redesign is optional future work |
 
@@ -46,4 +47,4 @@ No matrix-result defect was found in the 144-case baseline sweep. The reset/clea
 
 The data show smaller-than-ideal scaling and budget-induced stalls. They do **not** show that an 8×8 grid stops outperforming a 4×4 grid within these workloads. At B=4, P=8 still takes half the compute clocks of P=4 for both N values. This is the scaling result to explain in the report.
 
-The analysis module uses independent predictions to validate measured counters. The next hardware-analysis step is to add the P=4/P=8 reports and compare their implementation cost and timing.
+The analysis module uses independent predictions to validate measured counters. The completed FPGA comparison uses 4/16/64 DSPs and +3.955/+3.786/+2.176 ns internal WNS. At N=16/B=16, useful throughput per DSP is 0.842/0.696/0.516 MACs per clock. The latest analysis pairs each simulated workload with its measured hardware count. The raw reports and Thomas's original commits are unchanged.

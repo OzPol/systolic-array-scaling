@@ -3,7 +3,7 @@
 ## Branch and commit boundaries
 
 - Thomas's baseline is merged in PR #1, retaining `3459a9f` and `d771fc7` unchanged.
-- Follow-up work belongs on `oz-finish-systolic-study` and its own PR. Do not add follow-up commits to Thomas's branch or rewrite his authorship.
+- Follow-up work belongs on a new branch from current `main` and its own PR. The original `oz-finish-systolic-study` work was merged in PR #2; Thomas's later Vivado evidence was merged in PR #3. Do not add follow-up commits to Thomas's branch or rewrite his authorship.
 - Use one commit per feature, bug fix with its regression, new test group, or significant documentation change. Keep reviewed measurement updates in a separate commit where practical.
 - Keep each commit reviewable. Describe the behavior and validation in its message. Do not squash unrelated changes if their independent history matters to the team.
 
