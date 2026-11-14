@@ -1,16 +1,16 @@
-# Simulation visuals
+# All 18 simulation configurations
 
-Open `replay.html` in a browser to play or scrub the simulation and rotate the 3D views. P is the grid dimension, N the matrix order, and B the combined input words per clock.
+| Matrix workload | Activity atlas | Work after 32 clocks | First/last MAC surfaces |
+|---|---|---|---|
+| 8×8 | [Nine configurations](activity_matrix08.png) | [Work surfaces](work_matrix08.png) | [Execution windows](wavefront_matrix08.png) |
+| 16×16 | [Nine configurations](activity_matrix16.png) | [Work surfaces](work_matrix16.png) | [Execution windows](wavefront_matrix16.png) |
 
-| File | Story |
-|---|---|
-| `work_surface.png` / `.svg` | Work completed at every PE after sixteen clocks |
-| `wavefront_surfaces.png` / `.svg` | The first and last MAC clock at each PE |
-| `space_time.png` / `.svg` | MAC events distributed across PE row, column, and time |
-| `scaling_surface.png` / `.svg` | Throughput across the measured grid/budget combinations |
-| `tile_story.gif` | One output tile at full and restricted input supply |
-| `traces.json` | The compact per-clock data used by the replay |
+Rows are PE grids 2×2, 4×4, and 8×8. Columns are input budgets 4, 8, and 16 words per clock. Activity colors show useful MACs per PE per physical clock, averaged over four-clock bins.
 
-The animation compares P=8, N=16 with B=16 and B=4: one tile takes 31 and 76 clocks. Completed tiles remain on screen while their peer finishes.
+Open `replay.html` in a browser to select the PE grid, matrix workload, and input budget independently. Play or scrub the clocks and rotate the 3D view.
+
+`tile_story.gif` shows all three PE grids and both complete matrix workloads together, with separate chapters for budgets 4, 8, and 16. Height is the fraction of each PE’s total MAC assignment completed; completed configurations stay on screen while the others finish.
+
+`space_time.png`, `work_surface.png`, and `wavefront_surfaces.png` combine both matrix workloads into complete 18-panel overviews. `coverage.json` lists every displayed configuration. PNG and SVG exports are included.
 
 Regenerate with `python -m analysis.replay` after recording a sweep with `--trace-dir results/raw/traces`.
