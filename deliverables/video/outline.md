@@ -1,6 +1,6 @@
 # Five-minute project video outline
 
-The course guideline requires a five-minute recorded architecture/findings presentation. This is a storyboard and narration draft; no video has been recorded. The provided guideline does not require every team member to narrate. Divide speaking and recording duties within the team as appropriate.
+The course guideline requires a five-minute recorded architecture/findings presentation. The storyboard below allocates the five minutes across architecture, verification, and results. The provided guideline does not require every team member to narrate. Divide speaking and recording duties within the team as appropriate.
 
 | Time | Visual | Main point |
 |---|---|---|

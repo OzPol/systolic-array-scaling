@@ -116,9 +116,9 @@ $P$ & LUTs & FFs & DSPs & BRAM & WNS (ns)\\
 
 The original OOC report lists 71 input ports and 63 output ports without delay constraints. The WNS result applies to the constrained internal paths. Board I/O timing would require an external timing contract. The P=4/P=8 runs will complete the hardware cost and throughput-per-DSP comparison.
 
-\section{Conclusion and Completion Gate}
+\section{Conclusion}
 The verified RTL study demonstrates two distinct sources of sublinear scaling: budget-induced grid holds and finite-workload fill/drain/capture overhead. More PEs improve every measured case, while improving supply from four to sixteen words substantially benefits the 8-by-8. The remaining experimental gate is comparable larger-grid post-route evidence. Before final submission, replace the explicitly pending FPGA rows, regenerate cost-normalized figures, and revise hardware conclusions to match those measurements.
 
-\section*{Reproducibility and Contribution Record}
-Source, fixed vectors, scripts, CI configuration, measured CSVs, and analysis figures are maintained at \url{https://github.com/OzPol/systolic-array-scaling}. Thomas Martin delivered the initial RTL, testbench, original Questa sweep, and P=2 Vivado evidence in commits \texttt{3459a9f} and \texttt{d771fc7}, merged separately through PR 1. Subsequent verification, analysis, CI, setup documentation, and regressions are recorded as separate follow-up commits. The remaining report steps are to add the larger-grid FPGA results and review the compiled layout.
+\section*{Reproducibility}
+Source, fixed vectors, scripts, CI configuration, measured CSVs, and analysis figures are maintained at \url{https://github.com/OzPol/systolic-array-scaling}. The repository includes the fixed input vectors, simulation commands, cycle analysis, and per-clock activity replay.
 \end{document}

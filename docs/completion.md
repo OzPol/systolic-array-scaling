@@ -1,6 +1,6 @@
 # Completion checklist and remaining steps
 
-The project can be brought to a verified simulation-and-analysis state here. The full proposed study still needs actual P=4/P=8 Vivado evidence from a licensed machine. The recorded course presentation and Canvas submissions require the team.
+Simulation, analysis, replay, CI, and setup documentation are ready. Next are the P=4/P=8 Vivado runs, followed by the final report and video.
 
 ## Completed in the separate follow-up branch
 
@@ -98,7 +98,7 @@ Source: the repository's [course guidelines PDF](eel5764_project_guidelines_fall
 | Peer Q&A | November 19–20, 2026 | Asynchronous discussion participation |
 | Final written report | December 1, 2026, 11:59 PM | IEEE double-column conference-style paper |
 
-The guideline specifies one submission per group. The supplied video requirement does not say every member must narrate; the team may divide presentation duties, while checking Canvas for any newer instructor instructions. The recording itself and final Canvas confirmations are not completed by repository changes.
+The guideline specifies one submission per group. The supplied video requirement does not say every member must narrate; the team may divide presentation duties, while checking Canvas for any newer instructor instructions. Use the video outline and final figures to prepare the recording, then submit through Canvas.
 
 ## Optional work after the committed scope
 
