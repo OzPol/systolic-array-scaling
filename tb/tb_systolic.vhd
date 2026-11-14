@@ -21,7 +21,9 @@ entity tb_systolic is
     N           : positive := 8;
     B           : positive := 4;
     VEC_FILE    : string   := "tb/vectors/vec_n08.txt";
-    RESULT_FILE : string   := "results/raw/sim_results.csv"
+    RESULT_FILE : string   := "results/raw/sim_results.csv";
+    TRACE_FILE  : string   := "";
+    TRACE_CASE  : natural  := 5
   );
 end entity tb_systolic;
 
@@ -89,6 +91,51 @@ architecture sim of tb_systolic is
   constant EXP_TOTAL   : integer := EXP_COMPUTE + N * N;           -- plus serial readout of N*N words
 begin
   clk <= not clk after 5 ns;  -- 10 ns period (simulation-only: generates the clock)
+
+  -- Optional real per-edge activity trace. Snapshot fire/request signals BEFORE the
+  -- edge, then identify its action from the verified counter changes AFTER the edge.
+  -- Trace recording never drives the DUT and is disabled by default.
+  trace : process
+    file tf : text;
+    variable l : line;
+    variable cs : integer := -1;
+    variable cycle, phase, old_adv, old_stall, old_cap : integer := 0;
+    variable row_v, col_v, step_v : integer;
+    variable mask_v : std_logic_vector(0 to P*P-1);
+    variable running : boolean := false;
+  begin
+    if TRACE_FILE = "" then wait; end if;
+    file_open(tf, TRACE_FILE, write_mode);
+    write(l, string'("P,N,B,case,cycle,tile_row,tile_col,step,phase,mac_mask"));
+    writeline(tf, l);
+    loop
+      wait until rising_edge(clk);
+      if start = '1' then
+        cs := cs + 1; cycle := 0; running := true;
+      elsif running and cs = TRACE_CASE then
+        if done = '1' then
+          running := false;
+        else
+          cycle := cycle + 1;
+          old_adv := to_integer(cnt_adv); old_stall := to_integer(cnt_stall);
+          old_cap := to_integer(cnt_cap);
+          row_v := to_integer(tile_row); col_v := to_integer(tile_col);
+          step_v := to_integer(step_t); mask_v := mac_fire;
+          phase := 4; -- serial readout, unless a compute counter advances
+          wait for 1 ns;
+          if to_integer(cnt_adv) > old_adv then phase := 1;
+          elsif to_integer(cnt_stall) > old_stall then phase := 2;
+          elsif to_integer(cnt_cap) > old_cap then phase := 3;
+          end if;
+          write(l, integer'image(P) & "," & integer'image(N) & "," & integer'image(B) & "," &
+            integer'image(cs) & "," & integer'image(cycle) & "," & integer'image(row_v) & "," &
+            integer'image(col_v) & "," & integer'image(step_v) & "," & integer'image(phase) & "," &
+            to_hstring(mask_v));
+          writeline(tf, l);
+        end if;
+      end if;
+    end loop;
+  end process;
 
   -- Device under test: the whole design.
   u_dut : entity work.systolic_top

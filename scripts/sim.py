@@ -55,6 +55,7 @@ def main():
     parser.add_argument('--b', type=int, choices=(4, 8, 16), default=4)
     parser.add_argument('--sweep', action='store_true')
     parser.add_argument('--output', type=Path)
+    parser.add_argument('--trace-dir', type=Path, help='record the actual per-clock PE activity for performance case 5')
     args = parser.parse_args()
     sim = args.sim
     if sim == 'auto':
@@ -66,6 +67,9 @@ def main():
     output = (args.output or ROOT / 'results/raw' / f'{sim}_sim_results.csv').resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(HEADER)
+    if args.trace_dir:
+        args.trace_dir = args.trace_dir.resolve()
+        args.trace_dir.mkdir(parents=True, exist_ok=True)
     work = ROOT / 'build' / sim
     work.mkdir(parents=True, exist_ok=True)
     if sim == 'ghdl':
@@ -81,6 +85,8 @@ def main():
     for p, n, b in configs:
         generics = [f'-gP={p}', f'-gN={n}', f'-gB={b}',
                     f'-gVEC_FILE=tb/vectors/vec_n{n:02d}.txt', f'-gRESULT_FILE={output.as_posix()}']
+        if args.trace_dir:
+            generics.append(f'-gTRACE_FILE={(args.trace_dir / f"p{p}_n{n}_b{b}.csv").as_posix()}')
         log = work / f'p{p}_n{n}_b{b}.txt'
         if sim == 'ghdl':
             command = [executable, '-r', '--std=08', f'--workdir={work}', 'tb_systolic', *generics, '--assert-level=error']
