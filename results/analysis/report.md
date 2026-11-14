@@ -62,4 +62,8 @@ The study compares RTL cycle behavior and FPGA implementation cost.
 - `latency.png` / `.svg`: compute latency by grid, workload, and input budget.
 - `utilization.png` / `.svg`: useful PE utilization with the same comparisons.
 - `cycle_breakdown.png` / `.svg`: useful-equivalent work, fill/drain, capture, and budget stalls.
-- `throughput_vs_dsp.png` / `.svg`: only actual measured DSP counts; explicitly incomplete until P=4/8 are available.
+- `throughput_vs_dsp.png` / `.svg`: throughput paired with the collected FPGA DSP counts.
+- [8×8 matrix activity atlas](../visualization/activity_matrix08.png): all nine grid/budget combinations.
+- [16×16 matrix activity atlas](../visualization/activity_matrix16.png): all nine grid/budget combinations.
+
+Each atlas has PE grids 2×2, 4×4, and 8×8 down the rows and budgets 4, 8, and 16 across the columns. Color shows useful MACs per PE per clock in four-clock bins. Together they cover all 18 configurations.
