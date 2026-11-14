@@ -9,6 +9,7 @@ File format (one hex token per line, so VHDL textio can read it):
 Case order is fixed; CASE_NAMES[PERF_CASE] is the fixed-seed random case used
 as the principal performance workload.
 """
+import argparse
 import hashlib
 import pathlib
 import random
@@ -42,6 +43,9 @@ def cases(n):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check', action='store_true', help='verify canonical files without changing them')
+    args = parser.parse_args()
     out = pathlib.Path(__file__).resolve().parent.parent / "tb" / "vectors"
     out.mkdir(parents=True, exist_ok=True)
     manifest = [f"seed_base={SEED}", f"perf_case_index={PERF_CASE}", "cases=" + ",".join(CASE_NAMES)]
@@ -54,9 +58,20 @@ def main():
             lines += [f"{x & 0xFFFF:04x}" for x in b]
             lines += [f"{x & ((1 << 36) - 1):09x}" for x in c]
         path = out / f"vec_n{n:02d}.txt"
-        path.write_text("\n".join(lines) + "\n", encoding="ascii", newline="\n")
-        manifest.append(f"{path.name} sha256={hashlib.sha256(path.read_bytes()).hexdigest()}")
-    (out / "MANIFEST.txt").write_text("\n".join(manifest) + "\n", encoding="ascii", newline="\n")
+        data = ("\n".join(lines) + "\n").encode('ascii')
+        if args.check:
+            if not path.exists() or path.read_bytes() != data:
+                raise SystemExit(f'vector mismatch: {path}; run python3 scripts/gen_vectors.py')
+        else:
+            path.write_bytes(data)
+        manifest.append(f"{path.name} sha256={hashlib.sha256(data).hexdigest()}")
+    manifest_path = out / 'MANIFEST.txt'
+    data = ("\n".join(manifest) + "\n").encode('ascii')
+    if args.check:
+        if not manifest_path.exists() or manifest_path.read_bytes() != data:
+            raise SystemExit('manifest mismatch; run python3 scripts/gen_vectors.py')
+    else:
+        manifest_path.write_bytes(data)
     print("\n".join(manifest))
 
 

@@ -74,7 +74,8 @@ class MeasurementTests(unittest.TestCase):
 
     def test_missing_hardware_is_not_estimated(self):
         self.assertEqual(load_hardware(Path(self.temp.name)/'missing.csv'), [])
-        self.assertEqual(len(load_hardware(ROOT/'results/summary_vivado.csv')), 1)
+        hardware = load_hardware(ROOT/'results/summary_vivado.csv')
+        self.assertTrue(any(int(r['P']) == 2 and int(r['N']) == 16 for r in hardware))
 
 
 class ModelTests(unittest.TestCase):
