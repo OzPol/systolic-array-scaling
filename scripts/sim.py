@@ -103,7 +103,7 @@ def main():
     tracked = run(['git', 'ls-files', 'rtl', 'tb', 'scripts']).splitlines()
     manifest = {
         'source_commit': run(['git', 'rev-parse', 'HEAD']).strip(),
-        'source_dirty': bool(run(['git', 'status', '--porcelain']).strip()),
+        'source_dirty': bool(run(['git', 'status', '--porcelain', '--', 'rtl', 'tb', 'scripts', 'analysis', 'visualization', 'constraints', 'Makefile', 'requirements.txt', 'requirements-ci.txt', '.github']).strip()),
         'simulator': version, 'configurations': len(configs), 'cases_passed': len(rows),
         'source_sha256': {p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in tracked},
         'csv_sha256': hashlib.sha256(output.read_bytes()).hexdigest(), 'logs': logs,

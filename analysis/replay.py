@@ -23,7 +23,7 @@ def build(trace_dir, output, figures=True):
         raise ValueError('replay requires one validated trace for each of the 18 configurations')
     payload={'provenance':{
         'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
-        'source_dirty':bool(subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True).strip()),
+        'source_dirty':bool(subprocess.check_output(['git','status','--porcelain','--','rtl','tb','scripts','analysis','visualization','constraints','Makefile','requirements.txt','requirements-ci.txt','.github'],cwd=ROOT,text=True).strip()),
         'trace_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
         'frame_fields':['phase','tile_row','tile_col','boundary_step','mac_mask_hex'],
         'mask_order':'MSB is PE(0,0), row-major',

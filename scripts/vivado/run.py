@@ -37,7 +37,7 @@ def main():
             raise RuntimeError(f'{out} already exists without matching completion evidence; use a new --output-root')
         out.mkdir(parents=True)
         manifest={'P':p,'N':args.n,'part':'xck26-sfvc784-2LV-c','source_commit':commit,
-                  'source_dirty':bool(subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True).strip()),
+                  'source_dirty':bool(subprocess.check_output(['git','status','--porcelain','--','rtl','tb','scripts','analysis','visualization','constraints','Makefile','requirements.txt','requirements-ci.txt','.github'],cwd=ROOT,text=True).strip()),
                   'source_sha256':source,'completed':False}
         metadata.write_text(json.dumps(manifest,indent=2)+'\n')
         command=[executable,'-mode','batch','-nojournal','-nolog','-source','scripts/vivado/synth.tcl',
