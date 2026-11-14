@@ -47,7 +47,7 @@ def counts_at(trace,clock):
     return counts,frames[min(clock,len(frames))-1][0]
 
 
-def render(traces,output):
+def render(traces,output,make_animation=True):
     by_key=configurations(traces);output=Path(output)
     volumes={key:activity(t) for key,t in by_key.items()}
     cumulative={key:np.cumsum(v,axis=0) for key,v in volumes.items()}
@@ -60,11 +60,12 @@ def render(traces,output):
         fig.savefig(output/f'{name}.svg',bbox_inches='tight',metadata={'Date':None})
         plt.close(fig)
 
-    def style(ax,p,zmax,zlabel='',zpercent=False):
-        ax.set(xlabel='PE column',ylabel='PE row',zlabel=zlabel,xlim=(0,p-1),ylim=(0,p-1),zlim=(0,zmax))
+    def style(ax,p,zmax,zlabel='',zpercent=False,cells=False):
+        extent=(-.5,p-.5) if cells else (0,p-1)
+        ax.set(xlabel='PE column',ylabel='PE row',zlabel=zlabel,xlim=extent,ylim=extent,zlim=(0,zmax))
         ticks=[0,p-1] if p==2 else [0,(p-1)//2,p-1]
         ax.set_xticks(ticks);ax.set_yticks(ticks)
-        ax.set_zticks([0,zmax/2,zmax])
+        ax.set_zticks([0,.5,1] if zpercent else [0,int(zmax)//2,int(zmax)])
         if zpercent:ax.set_zticklabels(['0%','50%','100%'])
         ax.tick_params(labelsize=8,pad=0)
         ax.xaxis.labelpad=0;ax.yaxis.labelpad=0;ax.zaxis.labelpad=2
@@ -76,12 +77,13 @@ def render(traces,output):
 
     def title(t):
         p,n,b=t['P'],t['N'],t['B']
-        return f'Grid {p}×{p} · matrix {n}×{n} · B={b}\n{t["compute"]} clocks · {t["macs"]/(p*p*t["compute"]):.1%} PE use'
+        return f'Grid {p}×{p} · matrix {n}×{n}\nB={b} · {t["compute"]} clocks · {t["macs"]/(p*p*t["compute"]):.1%} PE use'
 
     def atlas(matrices,kind,name):
         rows=len(matrices)*3
-        fig=plt.figure(figsize=(12,rows*3.35+.7))
-        fig.subplots_adjust(left=.03,right=.88,bottom=.055,top=.94,hspace=.40,wspace=.28)
+        height=rows*3.35+.7
+        fig=plt.figure(figsize=(12,height))
+        fig.subplots_adjust(left=.03,right=.88,bottom=.055,top=1-1.5/height,hspace=.45,wspace=.28)
         for ni,n in enumerate(matrices):
             for pi,p in enumerate(GRIDS):
                 for bi,b in enumerate(BUDGETS):
@@ -91,21 +93,23 @@ def render(traces,output):
                     if kind=='volume':
                         # Four-clock bins retain actual physical time on the vertical axis.
                         starts=np.arange(0,t['compute'],4)
-                        z=np.array([min(s+4,t['compute']) for s in starts],dtype=float)
+                        z=np.array([0,*[min(s+4,t['compute']) for s in starts]],dtype=float)
                         density=np.array([v[s:min(s+4,len(v))].mean(axis=0) for s in starts])
                         mid=p//2
-                        xz,zz=np.meshgrid(np.arange(p),z)
+                        edges=np.arange(p+1)-.5
+                        xz,zz=np.meshgrid(edges,z)
                         ax.plot_surface(xz,np.full_like(xz,mid),zz,facecolors=cmap(density[:,mid,:]),
-                                        rstride=1,cstride=1,shade=False,alpha=.9,linewidth=0)
-                        yz,zz=np.meshgrid(np.arange(p),z)
+                                        rstride=1,cstride=1,shade=False,alpha=.9,linewidth=0,rasterized=True)
+                        yz,zz=np.meshgrid(edges,z)
                         ax.plot_surface(np.full_like(yz,mid),yz,zz,facecolors=cmap(density[:,:,mid]),
-                                        rstride=1,cstride=1,shade=False,alpha=.9,linewidth=0)
+                                        rstride=1,cstride=1,shade=False,alpha=.9,linewidth=0,rasterized=True)
                         for fraction in (.25,.5,.75):
                             zslice=max(1,int(t['compute']*fraction))
                             index=min(len(density)-1,(zslice-1)//4)
-                            ax.plot_surface(xx,yy,np.full_like(xx,zslice),facecolors=cmap(density[index]),
-                                            rstride=1,cstride=1,shade=False,alpha=.8,linewidth=0)
-                        style(ax,p,t['compute'],'Compute clock' if bi==0 else '')
+                            sx,sy=np.meshgrid(edges,edges)
+                            ax.plot_surface(sx,sy,np.full_like(sx,zslice),facecolors=cmap(density[index]),
+                                            rstride=1,cstride=1,shade=False,alpha=.8,linewidth=0,rasterized=True)
+                        style(ax,p,t['compute'],'Compute clock' if bi==0 else '',cells=True)
                     elif kind=='work':
                         clock=min(32,t['compute']);values=cumulative[key][clock-1]/(n**3/(p*p))
                         ax.plot_surface(xx,yy,values,cmap=cmap,norm=norm,edgecolor='#424b54',linewidth=.35,alpha=.95)
@@ -122,7 +126,7 @@ def render(traces,output):
                         for values,color in ((first,'#377f9b'),(last,'#cf8b3c')):
                             ax.plot_surface(xx,yy,values,color=color,alpha=.8,edgecolor='#424b54',linewidth=.35)
                         style(ax,p,len(first_tile(t)),'Tile clock' if bi==0 else '')
-                    ax.set_title(title(t),fontsize=10,pad=10)
+                    ax.set_title(title(t),fontsize=9,pad=10)
         heading={'volume':'PE activity through space and time','work':'Full-product work completed after 32 compute clocks',
                  'wavefront':'First and last MAC at every PE in the first output tile'}[kind]
         workload=' · '.join(f'{n}×{n} matrices' for n in matrices)
@@ -159,13 +163,20 @@ def render(traces,output):
     fig.suptitle('All 18 configurations · nine measured points per matrix workload',fontsize=14)
     save(fig,'scaling_surface')
 
+    if not make_animation:return
+
     # Each chapter shows all three PE grids and both complete matrix workloads.
     fig=plt.figure(figsize=(11,7.7))
     fig.subplots_adjust(left=.025,right=.93,bottom=.04,top=.84,hspace=.33,wspace=.22)
     axes={(n,p):fig.add_subplot(2,3,ni*3+pi+1,projection='3d')
           for ni,n in enumerate(MATRICES) for pi,p in enumerate(GRIDS)}
-    chapter_frames=28
-    chapters=[(b,int(clock)) for b in BUDGETS for clock in np.linspace(1,max(by_key[(n,p,b)]['compute'] for n in MATRICES for p in GRIDS),chapter_frames)]
+    chapters=[]
+    for b in BUDGETS:
+        completions=[by_key[(n,p,b)]['compute'] for n in MATRICES for p in GRIDS]
+        limit=max(completions)
+        samples=sorted(set([*np.linspace(1,32,12).astype(int),*np.linspace(32,limit,12).astype(int),
+                            *completions,*[c-1 for c in completions]]))
+        chapters.extend((b,int(clock)) for clock in samples)
     def update(frame):
         b,clock=chapters[frame]
         for (n,p),ax in axes.items():
