@@ -1,5 +1,5 @@
 <div id="pe-replay">
-  <h3>Systolic array · actual RTL activity</h3>
+  <h3>Systolic array simulation</h3>
   <div class="viz-controls">
     <label class="form-label">Configuration
       <select class="form-select" data-config aria-label="Simulation configuration"></select>
@@ -38,7 +38,7 @@ const traces=JSON.parse(root.querySelector('[data-traces]').textContent).traces;
 const q=s=>root.querySelector(s), config=q('[data-config]'), view=q('[data-view]'), slider=q('[data-slider]'), svg=q('[data-plot]');
 const ns='http://www.w3.org/2000/svg';
 let index=15,timer=null,rotation=.7;
-for(let k=0;k<traces.length;k++){const t=traces[k],o=document.createElement('option');o.value=k;o.textContent=`P=${t.P} · N=${t.N} · B=${t.B} words/clock`;config.append(o)}
+for(let k=0;k<traces.length;k++){const t=traces[k],o=document.createElement('option');o.value=k;o.textContent=`P${t.P} · N${t.N} · B${t.B}`;config.append(o)}
 config.value=String(traces.findIndex(t=>t.P===8&&t.N===16&&t.B===4));
 function node(tag,attrs={},text){let el=document.createElementNS(ns,tag);for(const[k,v]of Object.entries(attrs))el.setAttribute(k,v);if(text!==undefined)el.textContent=text;svg.append(el);return el}
 function line(a,b,attrs={}){return node('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'var(--border)','stroke-width':1,...attrs})}

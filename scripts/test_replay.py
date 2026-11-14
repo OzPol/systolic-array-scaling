@@ -28,10 +28,10 @@ def main():
         assert page.locator('[data-clock]').inner_text()!=before
         page.locator('[data-back]').click()
         assert page.locator('[data-clock]').inner_text()==before
-        page.locator('[data-config]').select_option(label='P=2 · N=8 · B=4 words/clock')
+        page.locator('[data-config]').select_option(label='P2 · N8 · B4')
         page.locator('[data-view]').select_option('grid')
         assert page.locator('svg rect').count()==4
-        page.locator('[data-config]').select_option(label='P=8 · N=16 · B=4 words/clock')
+        page.locator('[data-config]').select_option(label='P8 · N16 · B4')
         page.locator('[data-play]').click();page.wait_for_timeout(350)
         page.locator('[data-play]').click()
         assert page.locator('[data-clock]').inner_text()!=before
