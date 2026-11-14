@@ -1,0 +1,110 @@
+<div id="pe-replay">
+  <h3>Systolic array simulation</h3>
+  <div class="viz-controls">
+    <label class="form-label">PE grid
+      <select class="form-select" data-grid aria-label="PE grid"><option value="2">2×2</option><option value="4">4×4</option><option value="8">8×8</option></select>
+    </label>
+    <label class="form-label">Matrix workload
+      <select class="form-select" data-matrix aria-label="Matrix workload"><option value="8">8×8</option><option value="16">16×16</option></select>
+    </label>
+    <label class="form-label">Input words per clock
+      <select class="form-select" data-budget aria-label="Input words per clock"><option value="4">4</option><option value="8">8</option><option value="16">16</option></select>
+    </label>
+    <label class="form-label">View
+      <select class="form-select" data-view aria-label="Activity geometry">
+        <option value="grid">PE topology</option>
+        <option value="surface">3D work surface</option>
+        <option value="space">3D space–time</option>
+      </select>
+    </label>
+  </div>
+  <div class="viz-row"><button class="btn btn-primary" type="button" data-play>Play</button><button class="btn" type="button" data-back>Previous clock</button><button class="btn" type="button" data-next>Next clock</button><span data-clock class="tabular-nums"></span></div>
+  <label class="form-label">Compute clock<input class="form-range" data-slider type="range" min="0" value="15" aria-label="Compute clock"></label>
+  <div data-status class="tabular-nums" aria-live="polite"></div>
+  <svg data-plot role="img" aria-label="Processing element activity from an actual VHDL simulation trace"></svg>
+  <div class="viz-row text-small" data-legend><span><span class="pe-dot pe-mac"></span>MAC on this edge</span><span><span class="pe-dot pe-stall"></span>Budget stall</span><span><span class="pe-dot pe-idle"></span>Not firing</span></div>
+  <div class="text-small" data-detail></div>
+  <script type="application/json" data-traces>__TRACE_DATA__</script>
+</div>
+<style>
+#pe-replay{color:var(--foreground)}
+#pe-replay [data-plot]{width:100%;display:block;touch-action:pan-y}
+#pe-replay [data-plot] text{fill:var(--foreground);font-size:12px;font-weight:400}
+#pe-replay .pe-dot{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:50%}
+#pe-replay .pe-mac{background:var(--viz-series-1)}
+#pe-replay .pe-stall{background:var(--viz-series-2)}
+#pe-replay .pe-idle{background:var(--muted)}
+#pe-replay [data-status]{margin-top:8px}
+#pe-replay [data-detail]{margin-top:8px}
+</style>
+<script>
+(()=>{
+const root=document.getElementById('pe-replay');
+const traces=JSON.parse(root.querySelector('[data-traces]').textContent).traces;
+const q=s=>root.querySelector(s), config={value:0}, view=q('[data-view]'), slider=q('[data-slider]'), svg=q('[data-plot]');
+const ns='http://www.w3.org/2000/svg';
+let index=15,timer=null,rotation=.7;
+function choose(){config.value=traces.findIndex(t=>t.P===+q('[data-grid]').value&&t.N===+q('[data-matrix]').value&&t.B===+q('[data-budget]').value)}
+choose();
+function node(tag,attrs={},text){let el=document.createElementNS(ns,tag);for(const[k,v]of Object.entries(attrs))el.setAttribute(k,v);if(text!==undefined)el.textContent=text;svg.append(el);return el}
+function line(a,b,attrs={}){return node('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'var(--border)','stroke-width':1,...attrs})}
+function text(x,y,value,attrs={}){return node('text',{x,y,...attrs},value)}
+function bit(mask,i,p){return Number((BigInt('0x'+mask)>>BigInt(p*p-1-i))&1n)}
+function state(t){let counts=Array(t.P*t.P).fill(0),key='',start=0,tr=0,tc=0;
+ for(let j=0;j<=index;j++){let f=t.frames[j];if(f[0]<=3){let nk=f[1]+','+f[2];if(nk!==key){counts.fill(0);key=nk;start=j}tr=f[1];tc=f[2];for(let i=0;i<counts.length;i++)counts[i]+=bit(f[4],i,t.P)}}
+ return{counts,start,tr,tc};}
+function stop(){if(timer)clearInterval(timer);timer=null;q('[data-play]').textContent='Play';q('[data-status]').setAttribute('aria-live','polite')}
+function draw(){const t=traces[+config.value],p=t.P,n=t.N;index=Math.max(0,Math.min(index,t.compute-1));slider.max=t.compute-1;slider.value=index;
+ const f=t.frames[index],s=state(t),active=s.counts.map((_,i)=>bit(f[4],i,p));
+ const labels={1:'GRID ADVANCE',2:'BUDGET STALL · grid held',3:'TILE CAPTURE',4:'SERIAL READOUT'};
+ q('[data-clock]').textContent=`Clock ${index+1} / ${t.compute}`;
+ q('[data-status]').textContent=`${labels[f[0]]} · tile (${s.tr}, ${s.tc}) · boundary step ${f[3]}`;
+ q('[data-detail]').textContent=view.value==='grid'?'Cell number = observed useful MACs completed for this tile. A moves right; B moves down.':view.value==='surface'?'Height = observed useful MACs per PE in the current tile. Connected faces join the discrete PE samples. Drag to rotate.':'Each point is an actual PE MAC event. Vertical gaps expose clocks spent waiting for input. Drag to rotate.';
+ const w=Math.max(280,root.getBoundingClientRect().width),h=Math.max(330,Math.min(490,w*.65));svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.replaceChildren();
+ node('title',{},`P ${p}, N ${n}, input budget ${t.B}, clock ${index+1}, ${labels[f[0]]}`);
+ if(view.value==='grid'){
+  const cell=Math.min((w-92)/p,(h-85)/p),x0=(w-p*cell)/2,y0=45;
+  text(x0+p*cell/2,20,'A →    PE column',{'text-anchor':'middle'});
+  text(15,y0+p*cell/2,'B ↓  PE row',{transform:`rotate(-90 15 ${y0+p*cell/2})`,'text-anchor':'middle'});
+  for(let r=0;r<p;r++){text(x0-16,y0+(r+.55)*cell,r,{'text-anchor':'middle'});for(let c=0;c<p;c++){
+    let i=r*p+c,x=x0+c*cell,y=y0+r*cell;
+    let fill=active[i]?'var(--viz-series-1)':f[0]===2?'var(--viz-series-2)':'var(--muted)';
+    node('rect',{x:x+3,y:y+3,width:cell-6,height:cell-6,rx:2,fill,'fill-opacity':active[i]?.55:.3});
+    text(x+cell/2,y+cell*.56,s.counts[i],{'text-anchor':'middle'});
+    if(c<p-1)line([x+cell-3,y+cell/2],[x+cell+3,y+cell/2]);
+    if(r<p-1)line([x+cell/2,y+cell-3],[x+cell/2,y+cell+3]);
+  }}
+  for(let c=0;c<p;c++)text(x0+(c+.5)*cell,y0-9,c,{'text-anchor':'middle'});
+ }else{
+  const space=view.value==='space',maxZ=space?Math.max(1,index-s.start+1):n;
+  function raw(c,r,z){const x=c-(p-1)/2,y=r-(p-1)/2;return[Math.cos(rotation)*x-Math.sin(rotation)*y,(Math.sin(rotation)*x+Math.cos(rotation)*y)*.5-z/maxZ*p*.85]}
+  const bounds=[[-.8,-.8,0],[p-.1,-.8,0],[-.8,p-.1,0],[-.8,-.8,maxZ]] .map(v=>raw(...v));
+  for(let c=0;c<p;c++)for(let r=0;r<p;r++){bounds.push(raw(c,r,0),raw(c,r,maxZ))}
+  let xs=bounds.map(v=>v[0]),ys=bounds.map(v=>v[1]),minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
+  let scale=Math.min((w-120)/(maxx-minx),(h-85)/(maxy-miny));
+  function project(c,r,z){let v=raw(c,r,z);return[(w-(maxx-minx)*scale)/2+(v[0]-minx)*scale,40+(v[1]-miny)*scale]}
+  for(let r=0;r<p;r++)line(project(0,r,0),project(p-1,r,0));
+  for(let c=0;c<p;c++)line(project(c,0,0),project(c,p-1,0));
+  let origin=project(-.8,-.8,0),ca=project(p-.1,-.8,0),ra=project(-.8,p-.1,0),za=project(-.8,-.8,maxZ);
+  line(origin,ca);line(origin,ra);line(origin,za);text(ca[0],ca[1]+20,'PE column',{'text-anchor':'middle'});text(ra[0],ra[1]+20,'PE row',{'text-anchor':'middle'});
+  text(za[0],za[1]-14,space?'Tile clock':'Useful MACs / PE',{'text-anchor':'middle'});
+  for(let z of [0,Math.round(maxZ/2),maxZ]){let v=project(-.8,-.8,z);text(v[0]-8,v[1]+4,z,{'text-anchor':'end'})}
+  if(space){
+    let pts=[];for(let j=s.start;j<=index;j++){let row=t.frames[j];if(row[0]!==1)continue;for(let i=0;i<p*p;i++)if(bit(row[4],i,p)){let c=i%p,r=Math.floor(i/p),v=project(c,r,j-s.start+1);pts.push({v,depth:c+r})}}
+    pts.sort((a,b)=>a.depth-b.depth);for(let point of pts)node('circle',{cx:point.v[0],cy:point.v[1],r:Math.max(1.5,scale*.065),fill:'var(--viz-series-1)','fill-opacity':.6});
+  }else{
+    let faces=[];for(let r=0;r<p-1;r++)for(let c=0;c<p-1;c++){let ids=[r*p+c,r*p+c+1,(r+1)*p+c+1,(r+1)*p+c],vs=[[c,r],[c+1,r],[c+1,r+1],[c,r+1]].map((v,k)=>project(...v,s.counts[ids[k]]));faces.push({vs,z:ids.reduce((a,i)=>a+s.counts[i],0)/4,depth:raw(c+.5,r+.5,0)[1]})}
+    faces.sort((a,b)=>a.depth-b.depth);for(let face of faces)node('polygon',{points:face.vs.map(v=>v.join(',')).join(' '),fill:'var(--viz-series-1)','fill-opacity':.15+.65*face.z/n,stroke:'var(--border)','stroke-width':1});
+    for(let i=0;i<p*p;i++){let v=project(i%p,Math.floor(i/p),s.counts[i]);node('circle',{cx:v[0],cy:v[1],r:active[i]?3:1.8,fill:active[i]?'var(--viz-series-1)':'var(--foreground)'})}
+  }
+ }
+}
+for(const field of ['grid','matrix','budget'])q('[data-'+field+']').addEventListener('change',()=>{stop();choose();draw()});view.addEventListener('change',draw);
+slider.addEventListener('input',()=>{stop();index=+slider.value;draw()});
+q('[data-back]').addEventListener('click',()=>{stop();index--;draw()});q('[data-next]').addEventListener('click',()=>{stop();index++;draw()});
+q('[data-play]').addEventListener('click',()=>{if(timer){stop();return}const t=traces[+config.value];if(index>=t.compute-1)index=0;q('[data-play]').textContent='Pause';q('[data-status]').setAttribute('aria-live','off');timer=setInterval(()=>{index++;draw();if(index>=t.compute-1)stop()},matchMedia('(prefers-reduced-motion: reduce)').matches?200:80)});
+let drag=null;svg.addEventListener('pointerdown',e=>{if(view.value==='grid')return;drag=e.clientX;svg.setPointerCapture(e.pointerId)});
+svg.addEventListener('pointermove',e=>{if(drag===null)return;rotation+=(e.clientX-drag)*.01;drag=e.clientX;draw()});svg.addEventListener('pointerup',()=>drag=null);svg.addEventListener('pointercancel',()=>drag=null);
+new ResizeObserver(draw).observe(root);draw();
+})();
+</script>

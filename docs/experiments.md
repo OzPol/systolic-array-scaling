@@ -4,7 +4,7 @@
 
 For a fixed complete matrix multiplication, how do PE grid size and a modeled input-supply rate change cycle count, useful throughput, utilization, and FPGA cost?
 
-The 2Ã—2 grid is the architectural baseline. We compare it with 4Ã—4 and 8Ã—8 grids under the same matrix inputs and input budget. We do not presume that the largest grid provides proportional speedup.
+The 2×2 grid is the architectural baseline. We compare it with 4×4 and 8×8 grids under the same matrix inputs and input budget. We do not presume that the largest grid provides proportional speedup.
 
 ## Core sweep
 
@@ -25,13 +25,13 @@ The Cartesian product is **18 core configurations**, listed in [`configurations.
 - **PE utilization:** useful MACs divided by $P^2\times\text{compute cycles}$.
 - **Useful throughput:** $N^3/\text{compute cycles}$ in MACs per cycle.
 - **Compute speedup:** the $P=2$ compute cycles divided by the candidate's compute cycles at the same $(N,B)$ and identical matrix input.
-- **Scaling efficiency:** compute speedup divided by $P^2/4$, the PE-count increase relative to the 2Ã—2 baseline.
+- **Scaling efficiency:** compute speedup divided by $P^2/4$, the PE-count increase relative to the 2×2 baseline.
 
 Counter values must agree with the testbench event log. A run is valid only if every output matches the independent full-width software reference, the MAC count is $N^3$, and no operand is lost or counted twice.
 
 ## FPGA evaluation
 
-Synthesize the same top-level design at $P=2,4,8$ with the runtime budget option and a 10 ns constraint. Use the same KV260 part and synthesis settings for all three. Record LUTs, flip-flops, DSPs, block RAM, and the report stage for each value. Record timing slack after implementation where feasible. A zero BRAM count is a valid observation; it must not be inferred from the source code alone.
+Synthesize the same top-level design at $P=2,4,8$ with the runtime budget option and a 10 ns constraint. Use the same KV260 part and synthesis settings for all three. Record LUTs, flip-flops, DSPs, block RAM, and the report stage for each value. Record timing slack after implementation where feasible. Record the BRAM mapping reported by Vivado, including zero where applicable.
 
 Compare useful throughput per DSP only after confirming the DSP count and simulation workload. Convert cycles to elapsed time or MACs/second at the constrained clock **only for implementations that meet timing**. Report a timing or resource failure directly. Do not infer power or energy from FPGA resource counts.
 
@@ -40,3 +40,14 @@ Compare useful throughput per DSP only after confirming the DSP count and simula
 Produce (1) compute latency and PE utilization versus $P$, faceted by $N$ and $B$, and (2) useful throughput versus DSP use. Explain whether a difference is consistent with budget stalls, pipeline fill/drain, tile transitions, or resource/timing cost. The budget represents an RTL interface rule, not physical KV260 DRAM bandwidth.
 
 For each run, retain at least: configuration ID, input seed/checksum, source commit, tool version, test result, compute and readout cycles, useful MACs, stall cycles, synthesis target and stage, and any applicable resource/timing figures. Commit reviewed summary tables and scripts; keep bulky generated directories out of version control.
+
+
+## Reproduction and analysis commands
+
+`make check` runs vector integrity checks, Python validators, directed RTL regressions, the complete GHDL matrix sweep, and fresh plots. `python -m analysis.report` regenerates the reviewed analysis from committed summaries. See the README for Questa and Vivado alternatives.
+
+`analysis/model.py` implements independent closed-form cycle predictions. `analysis/report.py` requires all 18 configurations and eight cases per configuration, rejects duplicate or failed rows, checks N³ MACs and readout/counter consistency, and compares measured counts with the model. `analysis/plots.py` writes PNG and SVG figures. The FPGA plots update as each implementation report is collected.
+
+The cycle breakdown separates N³/P² useful-equivalent clocks, tile-count × (2P−2) fill/drain clocks, one capture clock per tile, and measured budget stalls. This is capacity-normalized accounting: useful MACs occur during fill/drain too. Useful MACs overlap the fill/drain stages.
+
+Serial readout is N² clocks in the present always-accepting interface. Its contribution is reported separately and can dominate small products. Wall-clock throughput at 100 MHz requires a properly scoped timing result; the existing OOC reports do not validate board I/O.

@@ -31,9 +31,9 @@ The inputs must be staggered so the matching $A[i,k]$ and $B[k,j]$ reach a PE to
 
 ```mermaid
 flowchart TB
-    W["Same complete A × B product<br/>N = 8 or 16"] --> T["Controller selects one output tile"]
-    T --> S["Stage A and B inputs<br/>4, 8, or 16 combined words per cycle"]
-    S --> G["P × P PE grid<br/>A moves right, B moves down, C stays"]
+    W["Same complete A × B product; N = 8 or 16"] --> T["Controller selects one output tile"]
+    T --> S["Stage A and B inputs; 4, 8, or 16 combined words per cycle"]
+    S --> G["P × P PE grid; A moves right, B moves down, C stays"]
     G --> O["Store tile and process the next one"]
     O --> C["Complete C; check against software"]
     G --> Q["Questa: cycles, stalls, useful MACs"]
@@ -51,7 +51,7 @@ Tiling is essential. A 2×2 grid cannot hold a whole 16×16 output, so it comput
 | 8×8 matrix | 16 output tiles | 4 tiles | 1 tile |
 | 16×16 matrix | 64 output tiles | 16 tiles | 4 tiles |
 
-This ensures all three designs perform the **same complete multiplication**. A smaller grid does more sequential tile work; a larger grid uses more hardware.
+This makes all three designs perform the **same complete multiplication**. A smaller grid does more sequential tile work; a larger grid uses more hardware.
 
 The controller’s job is approximately this (conceptual pseudocode, not VHDL):
 

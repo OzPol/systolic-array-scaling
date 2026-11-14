@@ -1,0 +1,13 @@
+{
+  "source_commit": "daa588d7e527ee0e2ef50c3bb0a23fe240e58a6f",
+  "source_dirty": false,
+  "inputs_sha256": {
+    "results/verification/ghdl_sim_results.csv": "4fbc16df9f9b6ca54c9f3a5ca1138866309093d62921f5053bbf1c4f04f1b6fe",
+    "results/summary_vivado.csv": "a7f78bb10817c18bca9b8d29770ae8cd0d7275e382187cc6eeb54097477ef31a"
+  },
+  "measured_configurations": 18,
+  "missing_vivado_p": [
+    4,
+    8
+  ]
+}

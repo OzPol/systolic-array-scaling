@@ -21,7 +21,9 @@ entity tb_systolic is
     N           : positive := 8;
     B           : positive := 4;
     VEC_FILE    : string   := "tb/vectors/vec_n08.txt";
-    RESULT_FILE : string   := "results/raw/sim_results.csv"
+    RESULT_FILE : string   := "results/raw/sim_results.csv";
+    TRACE_FILE  : string   := "";
+    TRACE_CASE  : natural  := 5
   );
 end entity tb_systolic;
 
@@ -53,6 +55,9 @@ architecture sim of tb_systolic is
 
   -- monitor results
   signal macs, out_words, out_errs, idx_errs : integer := 0;
+  -- Observe interface clocks independently of the DUT's counters and formulas.
+  signal observed_compute, observed_total : integer := 0;
+  signal active : boolean := false;
 
   -- Functions below compute the EXPECTED cycle counts from P, N, B, so the testbench
   -- can check the DUT's counters against an independent formula.
@@ -86,6 +91,51 @@ architecture sim of tb_systolic is
   constant EXP_TOTAL   : integer := EXP_COMPUTE + N * N;           -- plus serial readout of N*N words
 begin
   clk <= not clk after 5 ns;  -- 10 ns period (simulation-only: generates the clock)
+
+  -- Optional real per-edge activity trace. Snapshot fire/request signals BEFORE the
+  -- edge, then identify its action from the verified counter changes AFTER the edge.
+  -- Trace recording never drives the DUT and is disabled by default.
+  trace : process
+    file tf : text;
+    variable l : line;
+    variable cs : integer := -1;
+    variable cycle, phase, old_adv, old_stall, old_cap : integer := 0;
+    variable row_v, col_v, step_v : integer;
+    variable mask_v : std_logic_vector(0 to P*P-1);
+    variable running : boolean := false;
+  begin
+    if TRACE_FILE = "" then wait; end if;
+    file_open(tf, TRACE_FILE, write_mode);
+    write(l, string'("P,N,B,case,cycle,tile_row,tile_col,step,phase,mac_mask"));
+    writeline(tf, l);
+    loop
+      wait until rising_edge(clk);
+      if start = '1' then
+        cs := cs + 1; cycle := 0; running := true;
+      elsif running and cs = TRACE_CASE then
+        if done = '1' then
+          running := false;
+        else
+          cycle := cycle + 1;
+          old_adv := to_integer(cnt_adv); old_stall := to_integer(cnt_stall);
+          old_cap := to_integer(cnt_cap);
+          row_v := to_integer(tile_row); col_v := to_integer(tile_col);
+          step_v := to_integer(step_t); mask_v := mac_fire;
+          phase := 4; -- serial readout, unless a compute counter advances
+          wait for 1 ns;
+          if to_integer(cnt_adv) > old_adv then phase := 1;
+          elsif to_integer(cnt_stall) > old_stall then phase := 2;
+          elsif to_integer(cnt_cap) > old_cap then phase := 3;
+          end if;
+          write(l, integer'image(P) & "," & integer'image(N) & "," & integer'image(B) & "," &
+            integer'image(cs) & "," & integer'image(cycle) & "," & integer'image(row_v) & "," &
+            integer'image(col_v) & "," & integer'image(step_v) & "," & integer'image(phase) & "," &
+            to_hstring(mask_v));
+          writeline(tf, l);
+        end if;
+      end if;
+    end loop;
+  end process;
 
   -- Device under test: the whole design.
   u_dut : entity work.systolic_top
@@ -128,7 +178,16 @@ begin
     if rising_edge(clk) then
       if start = '1' then
         macs <= 0; out_words <= 0; out_errs <= 0; idx_errs <= 0;
+        observed_compute <= 0; observed_total <= 0; active <= true;
       else
+        if active then
+          if done = '1' then
+            active <= false;
+          else
+            observed_total <= observed_total + 1;
+            if out_valid = '0' then observed_compute <= observed_compute + 1; end if;
+          end if;
+        end if;
         inc := 0;
         for i in 0 to P*P-1 loop
           if mac_fire(i) = '1' then inc := inc + 1; end if;
@@ -208,6 +267,8 @@ begin
       check(out_errs = 0,    "case " & integer'image(cs) & ": output mismatches = " & integer'image(out_errs));
       check(idx_errs = 0,    "case " & integer'image(cs) & ": output order errors = " & integer'image(idx_errs));
       check(macs = N*N*N,    "case " & integer'image(cs) & ": useful MACs " & integer'image(macs) & " /= N^3");
+      check(observed_compute = to_integer(cnt_compute), "compute counter disagrees with interface clock count");
+      check(observed_total = to_integer(cnt_total), "total counter disagrees with interface clock count");
       check(to_integer(cnt_stall)   = EXP_STALL,   "case " & integer'image(cs) & ": stall cycles " & integer'image(to_integer(cnt_stall)) & " expected " & integer'image(EXP_STALL));
       check(to_integer(cnt_adv)     = EXP_ADV,     "case " & integer'image(cs) & ": advance cycles " & integer'image(to_integer(cnt_adv)) & " expected " & integer'image(EXP_ADV));
       check(to_integer(cnt_cap)     = EXP_CAP,     "case " & integer'image(cs) & ": capture cycles " & integer'image(to_integer(cnt_cap)) & " expected " & integer'image(EXP_CAP));
@@ -232,7 +293,7 @@ begin
              " cases=" & integer'image(ncases) & " compute=" & integer'image(EXP_COMPUTE) severity note;
     else
       report "TB FAIL P=" & integer'image(P) & " N=" & integer'image(N) & " B=" & integer'image(B) &
-             " errors=" & integer'image(total_errs) severity error;
+             " errors=" & integer'image(total_errs) severity failure;
     end if;
     finish;
   end process;

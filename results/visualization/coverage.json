@@ -1,0 +1,120 @@
+{
+  "configurations": [
+    {
+      "matrix_order": 8,
+      "grid_dimension": 2,
+      "input_budget": 4,
+      "compute_cycles": 176
+    },
+    {
+      "matrix_order": 8,
+      "grid_dimension": 2,
+      "input_budget": 8,
+      "compute_cycles": 176
+    },
+    {
+      "matrix_order": 8,
+      "grid_dimension": 2,
+      "input_budget": 16,
+      "compute_cycles": 176
+    },
+    {
+      "matrix_order": 8,
+      "grid_dimension": 4,
+      "input_budget": 4,
+      "compute_cycles": 88
+    },
+    {
+      "matrix_order": 8,
+      "grid_dimension": 4,
+      "input_budget": 8,
+      "compute_cycles": 60
+    },
+    {
+      "matrix_order": 8,
+      "grid_dimension": 4,
+      "input_budget": 16,
+      "compute_cycles": 60
+    },
+    {
+      "matrix_order": 8,
+      "grid_dimension": 8,
+      "input_budget": 4,
+      "compute_cycles": 44
+    },
+    {
+      "matrix_order": 8,
+      "grid_dimension": 8,
+      "input_budget": 8,
+      "compute_cycles": 30
+    },
+    {
+      "matrix_order": 8,
+      "grid_dimension": 8,
+      "input_budget": 16,
+      "compute_cycles": 23
+    },
+    {
+      "matrix_order": 16,
+      "grid_dimension": 2,
+      "input_budget": 4,
+      "compute_cycles": 1216
+    },
+    {
+      "matrix_order": 16,
+      "grid_dimension": 2,
+      "input_budget": 8,
+      "compute_cycles": 1216
+    },
+    {
+      "matrix_order": 16,
+      "grid_dimension": 2,
+      "input_budget": 16,
+      "compute_cycles": 1216
+    },
+    {
+      "matrix_order": 16,
+      "grid_dimension": 4,
+      "input_budget": 4,
+      "compute_cycles": 608
+    },
+    {
+      "matrix_order": 16,
+      "grid_dimension": 4,
+      "input_budget": 8,
+      "compute_cycles": 368
+    },
+    {
+      "matrix_order": 16,
+      "grid_dimension": 4,
+      "input_budget": 16,
+      "compute_cycles": 368
+    },
+    {
+      "matrix_order": 16,
+      "grid_dimension": 8,
+      "input_budget": 4,
+      "compute_cycles": 304
+    },
+    {
+      "matrix_order": 16,
+      "grid_dimension": 8,
+      "input_budget": 8,
+      "compute_cycles": 184
+    },
+    {
+      "matrix_order": 16,
+      "grid_dimension": 8,
+      "input_budget": 16,
+      "compute_cycles": 124
+    }
+  ],
+  "activity_color": "MACs per PE per physical clock, averaged over four-clock bins",
+  "work_height": "fraction of a physical PE's full-product MAC assignment",
+  "work_snapshot_clock": 32,
+  "animation_budget_chapters": [
+    4,
+    8,
+    16
+  ]
+}

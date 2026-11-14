@@ -2,7 +2,7 @@
 
 ## Purpose and scope
 
-This document describes the planned output-stationary VHDL matrix multiplier. The same design generates square PE grids of size $P=2,4,8$ and computes complete $N\times N$ products for $N=8,16$. All configurations use signed 16-bit input words. The RTL includes input staging, a tiled computation controller, and serial result readout. The KV260 is a Vivado synthesis target; no physical board or external DRAM controller is in scope.
+This document describes the implemented output-stationary VHDL matrix multiplier. The same design generates square PE grids of size $P=2,4,8$ and computes complete $N\times N$ products for $N=8,16$. All configurations use signed 16-bit input words. The RTL includes input staging, a tiled computation controller, and serial result readout. The KV260 is a Vivado synthesis target; no physical board or external DRAM controller is in scope.
 
 ## Dataflow
 
@@ -12,11 +12,11 @@ $$
 C[r_0+r,c_0+c]=\sum_{k=0}^{N-1}A[r_0+r,k]B[k,c_0+c].
 $$
 
-One conventional skew schedule introduces $A[r_0+r,k]$ and $B[k,c_0+c]$ on boundary step $t=k+r$ and $t=k+c$, respectively. Internal register movement then brings both operands to PE $(r,c)$ for the same MAC. Valid signals accompany operands so fill and drain cycles do not create spurious MACs. The exact clock-edge convention will be fixed alongside the first PE testbench and used consistently in the counters.
+One conventional skew schedule introduces $A[r_0+r,k]$ and $B[k,c_0+c]$ on boundary step $t=k+r$ and $t=k+c$, respectively. Internal register movement then brings both operands to PE $(r,c)$ for the same MAC. Valid signals accompany operands so fill and drain cycles do not create spurious MACs. Operands presented during RUN are consumed at the rising edge when the stager is complete. Registered links move one PE per enabled rising edge; all grid registers hold on an incomplete step.
 
 ## Numeric representation
 
-| Item | Planned definition |
+| Item | Implemented definition |
 |---|---|
 | Inputs | Signed 16-bit two's-complement $A$ and $B$ |
 | Product | Signed 32-bit result before extension |
@@ -35,7 +35,7 @@ Thirty-six signed bits preserve the exact sum for every 16-term dot product of s
 | `tile_controller` | Enumerate output tiles and inner indices, clear at the correct boundary, wait for in-flight work to finish, and store each completed tile at its global output coordinates. |
 | Result storage/readout | Retain the complete $N\times N$ output and expose its elements serially after computation. Readout time is counted separately. |
 
-These are logical responsibilities. RTL files may be combined or split after the first working 2Ã—2 implementation; the behavior and measurement definitions remain the same.
+The tile controller, result store, serial readout, and optional instrumentation are implemented together in `rtl/systolic_top.vhd`; the other modules have matching RTL files. Shared widths and array types live in `rtl/sys_pkg.vhd`.
 
 ## Tiling
 
@@ -47,20 +47,47 @@ The next tile must not clear PE state until the preceding tile's last MAC has co
 
 The experiment selects a budget $B\in\{4,8,16\}$ **combined $A/B$ words per clock**. A full boundary step can request at most $2P$ words, although fill and drain steps can request fewer. The stager accumulates that step's valid words; the grid advances exactly once when the step is complete. While staging is incomplete, every PE's accumulator, forwarded data, and valid state hold. During a drain step with no new boundary words, the grid advances normally.
 
-The working design choice is a runtime budget setting in synthesizable staging logic, with the same maximum-width input interface for all three budget settings. The testbench supplies operands and also checks that the RTL enforces $B$ and holds state correctly. This lets Vivado compare **three grid implementations** while the simulation varies $B$ on each implementation. The input budget is a modeled interface limit, not a measured KV260 memory rate.
+The implemented interface uses a runtime budget setting in synthesizable staging logic, with the same maximum-width input interface for all three budget settings. The testbench supplies operands and also checks that the RTL enforces $B$ and holds state correctly. This allows Vivado to compare **three grid implementations** while the simulation varies $B$ on each implementation. The input budget is a modeled interface limit, not a measured KV260 memory rate.
 
-At full supply ($B\ge 2P$), a complete incoming step should advance without an artificial extra staging cycle. If an implementation requires an additional clock even at full supply, that latency must be documented and included consistently; it must not be silently attributed to input bandwidth.
+At full supply ($B\ge 2P$), the stager completes the incoming step on the same clock. It adds no extra staging clock.
 
 ## Synthesis boundary
 
-Vivado will synthesize the grid, controller, staging logic, result storage, and serial output path at the same 10 ns constraint and exact KV260 target part. The testbench and software reference model are excluded. The precise top-level port map and part number will be recorded in `setup.md` once the tool environment is checked. Resource and timing reports must name the synthesis stage used; timing slack after implementation is reported where feasible.
+Vivado will synthesize the grid, controller, staging logic, result storage, and serial output path at the same 10 ns constraint and exact KV260 target part. The testbench and software reference model are excluded. The top is `systolic_top`, with `P`, `N`, and `INSTR` generics; the recorded part is `xck26-sfvc784-2LV-c`. `INSTR=false` removes measurement counters for synthesis. See `setup.md` for provenance and timing scope. Resource and timing reports must name the synthesis stage used; timing slack after implementation is reported where feasible.
 
 ## Verification gates
 
 1. Verify one PE's signed MAC, valid forwarding, clear, and stall hold.
-2. Verify a 2Ã—2 output tile with known values and no stalls.
-3. Verify complete 8Ã—8 and 16Ã—16 products through tiling.
+2. Verify a 2×2 output tile with known values and no stalls.
+3. Verify complete 8×8 and 16×16 products through tiling.
 4. Verify budget staging, stalls, signed extremes, and fixed-seed random inputs.
 5. Repeat the same correctness checks at $P=4$ and $P=8$ before collecting performance data.
 
 The proposal does not include an alternate dataflow, processor interface, DRAM controller, CPU baseline, power measurement, or physical FPGA run.
+
+
+## Implemented controller and clock convention
+
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE
+    IDLE --> RUN: start
+    RUN --> RUN: incomplete boundary step
+    RUN --> CAPTURE: last enabled step
+    CAPTURE --> RUN: more tiles
+    CAPTURE --> READOUT: last tile stored
+    READOUT --> DONE: last serial word
+    DONE --> RUN: start
+```
+
+`T_STEPS = N + 2P - 2`. RUN includes zero-input drain steps, which advance without budget stalls. CAPTURE copies the preceding tile's completed accumulators and clears the grid at the same rising edge. Every tile, including the last, uses one capture clock. READOUT transfers N² row-major words, one per rising edge, with `out_valid=1`; there is no output-ready/backpressure input. A consumer must accept every word during that interval. `done` remains high until a new start or reset.
+
+The input interface publishes `tile_row`, `tile_col`, `step_t`, `a_need`, and `b_need`. The producer supplies the requested boundary values and holds the logical step's values while staging proceeds. `stage_got` exposes accepted words only when instrumentation is enabled; synthesis-mode producers must not depend on that debug signal. Runtime budget is assumed positive and stable for the intended experiment; the supported sweep values are 4, 8, and 16.
+
+Simulation exposes `cnt_compute`, `cnt_total`, `cnt_stall`, `cnt_adv`, `cnt_cap`, and per-PE `mac_fire`. Reset and clear suppress useful MAC events. The testbench observes result events and elapsed transaction clocks independently, compares counters with those observations and the separate formula, and counts only actual useful MAC fires.
+
+## Result storage and synthesis evidence
+
+Each capture writes P² output elements into the N²-element store. This multiwrite structure mapped to registers in the existing P=2 Vivado run, with 9,216 storage bits at N=16. Changing it to BRAM would change the design and capture schedule; it is not a prerequisite for the proposed study. The P=2 implementation therefore reports zero BRAM.
+
+The P=2 reports constrain internal paths at 10 ns but leave external input/output delays unspecified. The synthesis-mode equivalence regression compares requests, values, and readout/completion timing against the instrumented design. This regression checks the two RTL configurations.
