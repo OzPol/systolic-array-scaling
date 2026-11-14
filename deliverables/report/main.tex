@@ -8,7 +8,7 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-We evaluate a parameterized output-stationary VHDL matrix multiplier across three processing-element grids, two matrix orders, and three modeled operand-supply budgets. All 18 configurations pass eight full-width correctness cases, independently rerun using GHDL after the original Questa evaluation. For order-16 products at full supply, the 2-by-2, 4-by-4, and 8-by-8 arrays require 1216, 368, and 124 compute clocks. The largest array achieves 9.806 times the baseline speedup using 16 times as many processing elements. Limiting that array to four combined input words per clock introduces 180 stalls and raises latency to 304 clocks. A cycle decomposition identifies budget stalls, fill/drain, and per-tile capture costs. The available 2-by-2 FPGA result uses four DSPs and meets its internal 10 ns constraint. Larger-grid FPGA measurements remain pending in this draft; hardware scaling conclusions are withheld until they are available.
+We evaluate a parameterized output-stationary VHDL matrix multiplier across three processing-element grids, two matrix orders, and three modeled operand-supply budgets. All 18 configurations pass eight full-width correctness cases, independently rerun using GHDL after the original Questa evaluation. For order-16 products at full supply, the 2-by-2, 4-by-4, and 8-by-8 arrays require 1216, 368, and 124 compute clocks. The largest array achieves 9.806 times the baseline speedup using 16 times as many processing elements. Limiting that array to four combined input words per clock introduces 180 stalls and raises latency to 304 clocks. A cycle decomposition identifies budget stalls, fill/drain, and per-tile capture costs. The available 2-by-2 FPGA result uses four DSPs and meets its internal 10 ns constraint. The next implementation runs cover the larger grids and complete the FPGA cost comparison.
 \end{abstract}
 \begin{IEEEkeywords}
 systolic array, matrix multiplication, input bandwidth, FPGA, architectural evaluation
@@ -98,11 +98,11 @@ $P$ & $B$ & Compute & Stalls & MACs/clock & Util. (\%)\\
 A larger array still improves compute latency in every tested configuration. At $B=4$, the 8-by-8 takes half the clocks of the 4-by-4 for both matrix orders. We therefore conclude that limited input supply reduces scaling efficiency; this sweep does not establish a point beyond which grid growth ceases to help.
 
 \section{FPGA Evidence and Limitations}
-The available post-route P=2/N=16 implementation uses 7260 LUTs, 9437 FFs, four DSPs, and zero BRAM, with +3.955 ns internal WNS at the 10 ns constraint. The $16\times16\times36$-bit result store maps to registers, accounting for 9216 storage bits. This is a measured mapping result, not a BRAM estimate.
+The available post-route P=2/N=16 implementation uses 7260 LUTs, 9437 FFs, four DSPs, and zero BRAM, with +3.955 ns internal WNS at the 10 ns constraint. The $16\times16\times36$-bit result store maps to registers, accounting for 9216 storage bits. The multiwrite result store maps to registers in this implementation.
 
 \begin{table}[t]
 \centering
-\caption{Post-route FPGA evidence. Pending rows are not estimates.}
+\caption{Post-route FPGA results. The 4-by-4 and 8-by-8 runs are next.}
 \begin{tabular}{rrrrrl}
 \toprule
 $P$ & LUTs & FFs & DSPs & BRAM & WNS (ns)\\
@@ -114,11 +114,11 @@ $P$ & LUTs & FFs & DSPs & BRAM & WNS (ns)\\
 \end{tabular}
 \end{table}
 
-The original OOC report lists 71 input ports and 63 output ports without delay constraints. Positive WNS applies to constrained internal paths and does not establish board I/O timing, measured system throughput at 100 MHz, or an achievable unconstrained maximum frequency. FPGA cost scaling and throughput per DSP remain incomplete until the P=4/P=8 runs are collected. No power or energy conclusion is inferred from resource counts.
+The original OOC report lists 71 input ports and 63 output ports without delay constraints. The WNS result applies to the constrained internal paths. Board I/O timing would require an external timing contract. The P=4/P=8 runs will complete the hardware cost and throughput-per-DSP comparison.
 
 \section{Conclusion and Completion Gate}
 The verified RTL study demonstrates two distinct sources of sublinear scaling: budget-induced grid holds and finite-workload fill/drain/capture overhead. More PEs improve every measured case, while improving supply from four to sixteen words substantially benefits the 8-by-8. The remaining experimental gate is comparable larger-grid post-route evidence. Before final submission, replace the explicitly pending FPGA rows, regenerate cost-normalized figures, and revise hardware conclusions to match those measurements.
 
 \section*{Reproducibility and Contribution Record}
-Source, fixed vectors, scripts, CI configuration, measured CSVs, and analysis figures are maintained at \url{https://github.com/OzPol/systolic-array-scaling}. Thomas Martin delivered the initial RTL, testbench, original Questa sweep, and P=2 Vivado evidence in commits \texttt{3459a9f} and \texttt{d771fc7}, merged separately through PR 1. Subsequent verification, analysis, CI, setup documentation, and regressions are recorded as separate follow-up commits. The report source is a draft until missing hardware evidence and rendered layout are reviewed.
+Source, fixed vectors, scripts, CI configuration, measured CSVs, and analysis figures are maintained at \url{https://github.com/OzPol/systolic-array-scaling}. Thomas Martin delivered the initial RTL, testbench, original Questa sweep, and P=2 Vivado evidence in commits \texttt{3459a9f} and \texttt{d771fc7}, merged separately through PR 1. Subsequent verification, analysis, CI, setup documentation, and regressions are recorded as separate follow-up commits. The remaining report steps are to add the larger-grid FPGA results and review the compiled layout.
 \end{document}

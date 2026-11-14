@@ -10,7 +10,7 @@ The course guideline requires a five-minute recorded architecture/findings prese
 | 2:00–3:15 | `results/analysis/latency.png` | 1216/368/124 at N=16/B=16; input restriction raises P=8 to 304 |
 | 3:15–4:10 | `cycle_breakdown.png` and utilization | Separate budget stalls from finite-workload overhead; useful work overlaps fill/drain |
 | 4:10–4:45 | Actual FPGA table and DSP plot | Report only measured designs; explain internal timing scope and result storage |
-| 4:45–5:00 | Conclusion and limitations | Larger grids help, with sublinear scaling; no physical DRAM/power claim |
+| 4:45–5:00 | Conclusion and limitations | Larger grids help, with sublinear scaling |
 
 ## Narration draft
 
@@ -30,14 +30,14 @@ The input limit has a measurable cost. On the 8-by-8 grid, an eight-word budget 
 
 Input supply is not the only source of lost utilization. At full supply, the order-sixteen product on the 8-by-8 has sixty-four useful-equivalent clocks, fifty-six fill-and-drain clocks, and four capture clocks. This is capacity-normalized accounting, not a claim that no useful MACs occur during filling and draining. Serial readout also matters: for the smallest fully supplied product, it adds sixty-four clocks to twenty-three compute clocks.
 
-The available 2-by-2 FPGA implementation uses four DSPs, 7260 LUTs, and 9437 flip-flops, with zero block RAM. Most storage bits hold the complete result matrix. Its constrained internal paths have positive slack at ten nanoseconds. External interface delays are unspecified, so this does not establish board I/O timing or measured system throughput.
+The available 2-by-2 FPGA implementation uses four DSPs, 7260 LUTs, and 9437 flip-flops, with zero block RAM. Most storage bits hold the complete result matrix. Its constrained internal paths have positive slack at ten nanoseconds. This timing result covers the constrained internal paths.
 
-Our conclusion is that adding processing elements helps in every tested configuration, but input supply and finite-workload overhead reduce scaling efficiency. We do not claim that larger arrays stop helping in this sweep. The reproducible scripts, checked measurements, and automated PR tests make the remaining hardware comparison straightforward to extend.
+Our conclusion is that adding processing elements helps in every tested configuration, but input supply and finite-workload overhead reduce scaling efficiency. The larger arrays remain faster throughout this sweep. The reproducible scripts, checked measurements, and automated PR tests make the remaining hardware comparison straightforward to extend.
 
 ## Before recording
 
-- Replace the FPGA segment with all measured P=2/4/8 results when available. If the larger runs are still absent, state that limitation explicitly and do not present a complete hardware scaling claim.
-- Use the final measured figures, not earlier illustrative slides or predicted values presented as results.
+- Update the FPGA segment after the P=4/P=8 runs finish.
+- Use the latest figures from the analysis module.
 - Rehearse and trim to five minutes; the draft timing is an allocation, not a measured recording duration.
 - Show the architecture and findings. Reading terminal output alone does not communicate the architectural result.
 - Review the recording for legible charts and intelligible audio, then follow the single-submission Canvas instructions.

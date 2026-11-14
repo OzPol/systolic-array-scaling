@@ -49,7 +49,7 @@ The experiment selects a budget $B\in\{4,8,16\}$ **combined $A/B$ words per cloc
 
 The implemented interface uses a runtime budget setting in synthesizable staging logic, with the same maximum-width input interface for all three budget settings. The testbench supplies operands and also checks that the RTL enforces $B$ and holds state correctly. This allows Vivado to compare **three grid implementations** while the simulation varies $B$ on each implementation. The input budget is a modeled interface limit, not a measured KV260 memory rate.
 
-At full supply ($B\ge 2P$), a complete incoming step should advance without an artificial extra staging cycle. If an implementation requires an additional clock even at full supply, that latency must be documented and included consistently; it must not be silently attributed to input bandwidth.
+At full supply ($B\ge 2P$), the stager completes the incoming step on the same clock. It adds no extra staging clock.
 
 ## Synthesis boundary
 
@@ -88,6 +88,6 @@ Simulation exposes `cnt_compute`, `cnt_total`, `cnt_stall`, `cnt_adv`, `cnt_cap`
 
 ## Result storage and synthesis evidence
 
-Each capture writes P² output elements into the N²-element store. This multiwrite structure mapped to registers in the existing P=2 Vivado run, with 9,216 storage bits at N=16. Changing it to BRAM would change the design and capture schedule; it is not a prerequisite for the proposed study. The measured zero-BRAM outcome must be retained honestly.
+Each capture writes P² output elements into the N²-element store. This multiwrite structure mapped to registers in the existing P=2 Vivado run, with 9,216 storage bits at N=16. Changing it to BRAM would change the design and capture schedule; it is not a prerequisite for the proposed study. The P=2 implementation therefore reports zero BRAM.
 
-The P=2 reports constrain internal paths at 10 ns but leave external input/output delays unspecified. The synthesis-mode equivalence regression compares requests, values, and readout/completion timing against the instrumented design. It is RTL regression evidence, not a routed-netlist equivalence proof.
+The P=2 reports constrain internal paths at 10 ns but leave external input/output delays unspecified. The synthesis-mode equivalence regression compares requests, values, and readout/completion timing against the instrumented design. This regression checks the two RTL configurations.

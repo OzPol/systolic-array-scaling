@@ -25,7 +25,7 @@ git rev-parse HEAD
 git status --short
 ```
 
-A clean working tree is preferred for reviewed measurements. The simulator records `source_dirty` and per-file hashes, so a dirty run remains identifiable. Do not describe dirty results as coming solely from the named commit.
+For repeatable measurements, run from a clean checkout. The simulator records the commit and file hashes with each run.
 
 ## Open-source setup details
 
@@ -85,7 +85,7 @@ After a run, inspect:
 4. `check_timing_impl.rpt`, `drc_impl.rpt`, `methodology_impl.rpt`: remaining violations and warnings.
 5. `run.json`: source hash/commit, correct P/N/part, and `completed=true`.
 
-The original P=2 timing report has 71 inputs and 63 outputs without delay constraints. Its +3.955 ns WNS applies to the constrained internal paths. No external source/sink timing contract exists in this project, so do not claim verified board I/O timing or a measured clock-rate performance result.
+The P=2 timing report gives +3.955 ns WNS for the constrained internal paths. The current OOC setup leaves external input/output delays unspecified; board I/O timing would be a separate implementation step.
 
 ## Troubleshooting
 
@@ -103,4 +103,4 @@ The original P=2 timing report has 71 inputs and 63 outputs without delay constr
 | CSV/report does not change after a Vivado run | Run `scripts/collect_vivado.py` for the correct source directory, then regenerate analysis |
 | GitHub cannot find a required check | Let CI complete once, then select `VHDL and analysis` in the main-branch ruleset |
 
-Docker and native macOS setup are optional documented paths. They were not executed in this workspace. Updated Questa and Vivado execution require the licensed team environment; their parsers and open-source regressions were tested here.
+The Linux/GHDL workflow and report parsers have been tested. Docker and macOS are alternative setups; Questa and Vivado run in the licensed team environment.

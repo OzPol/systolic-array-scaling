@@ -13,7 +13,7 @@ Thomas Martin's branch was merged **before** Oz's follow-up work, through [PR #1
 
 **Assessment:** Thomas's contribution is substantial. It provides most of the executable baseline implementation and original measurement pipeline, not a cosmetic addition or isolated helper. His November 10 message accurately describes the branch contents and the remaining P=4/P=8 Vivado work. The second November commit is primarily explanatory comments; the first contains the substantive implementation.
 
-Commit/file size is not a useful workload percentage: most added lines are vectors, logs, and generated reports. This review assesses delivered behavior and evidence, not hours, effort, or who typed each line. Recorded AI assistance does not change which team member delivered and validated the branch. No commits attributed to Keith appear in the reviewed history; that does not establish whether he contributed outside GitHub.
+Most added lines are vectors, logs, and reports, so line counts would overstate the implementation size. The functional contribution is substantial. Keith has no commits in the reviewed history; any work outside GitHub would need to be assessed separately.
 
 ## Verified behavior
 
@@ -37,13 +37,13 @@ Commit/file size is not a useful workload percentage: most added lines are vecto
 | Old summarizer accepted incomplete configuration sets and rewrote summaries | Partial runs could produce misleading reviewed tables | Routed summarization through strict completeness/integrity validation; preserved original evidence |
 | README/setup/architecture still described implementation as planned | Users could not reproduce the existing code reliably | Updated interfaces, clock conventions, setup, commands, troubleshooting, CI, and completion gates |
 | Only P=2 has a routed FPGA result | Hardware scaling and throughput/DSP comparisons remain incomplete | Sequential runner and report collector are ready; P=4/P=8 remain pending |
-| External input/output delays are absent in the original OOC timing report | Positive WNS covers constrained internal timing, not board I/O timing | Report timing scope explicitly; do not claim verified system MHz or physical throughput |
+| External input/output delays are absent in the original OOC timing report | Positive WNS covers constrained internal timing, not board I/O timing | Keep internal timing and board-level timing separate |
 | P=2 result RAM maps to registers | N=16 result store accounts for 9,216 bits and much of the FF cost | Retain measured mapping; memory redesign is optional future work |
 
 No matrix-result defect was found in the 144-case baseline sweep. The reset/clear finding concerns the useful-MAC instrumentation contract, and the top-level original schedule does not assert grid enable during those clear cycles; its published sweep counts are not invalidated by that fix.
 
 ## Interpretation limits
 
-The data show smaller-than-ideal scaling and budget-induced stalls. They do **not** show that an 8×8 grid stops outperforming a 4×4 grid within these workloads. At B=4, P=8 still takes half the compute clocks of P=4 for both N values. Report the measured result instead of forcing a stronger bandwidth-knee conclusion.
+The data show smaller-than-ideal scaling and budget-induced stalls. They do **not** show that an 8×8 grid stops outperforming a 4×4 grid within these workloads. At B=4, P=8 still takes half the compute clocks of P=4 for both N values. This is the scaling result to explain in the report.
 
-The analysis module uses independent predictions to validate measured counters. It does not generate missing measurements. Hardware cost and timing comparisons must remain incomplete until actual P=4/P=8 reports are available.
+The analysis module uses independent predictions to validate measured counters. The next hardware-analysis step is to add the P=4/P=8 reports and compare their implementation cost and timing.

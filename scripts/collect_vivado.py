@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect actual reports; missing/partial runs never acquire invented resource rows."""
+"""Collect completed Vivado reports and preserve earlier configurations."""
 import argparse
 import csv
 import json

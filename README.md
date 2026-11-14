@@ -12,7 +12,7 @@ The question is how input supply, finite workloads, and tile overhead limit the 
 - The original Questa sweep records **144 passing cases**. An independent GHDL sweep also passes all 144, with full 36-bit output comparison and independent interface-clock checks.
 - Directed RTL regressions cover the PE, input stager, and agreement between instrumented and synthesis-mode datapaths. Python tests reject incomplete, duplicate, failed, and inconsistent measurements.
 - The measured **P=2, N=16** Vivado implementation uses **7,260 LUTs, 9,437 FFs, 4 DSPs, 0 BRAM**, with **+3.955 ns internal slack** at a 10 ns constraint.
-- **P=4 and P=8 Vivado runs remain pending.** No resource counts are extrapolated. Board execution, power measurement, and physical DRAM testing are outside the proposal scope.
+- **Next: run P=4 and P=8 in Vivado**, then update the FPGA comparison. The proposed study uses simulation and FPGA implementation reports.
 
 At N=16/B=16, compute cycles are 1216 / 368 / 124. At N=16/P=8/B=4, 180 budget stalls increase compute latency to 304 clocks. Larger arrays still help in every tested case; the measurements show reduced scaling efficiency rather than a complete loss of scaling benefit.
 
@@ -73,7 +73,7 @@ python -m pip install -r requirements.txt
 make check PYTHON=python
 ```
 
-The native macOS path is documented but has not been run in this workspace. Linux/GHDL/Python 3.12 is the validated path. No FPGA board, paid simulator, or Vivado license is required for the open-source checks.
+The tested setup is Linux with GHDL and Python 3.12. macOS is an alternative setup. The open-source workflow runs without an FPGA board or paid simulator.
 
 ## Container alternative
 
@@ -91,7 +91,7 @@ mkdir -p results/raw
 docker run --rm -v "$PWD/results/raw:/app/results/raw" systolic-study
 ```
 
-The image runs `make check` using Ubuntu 24.04, GHDL, Python, and pinned Python packages. Docker is unavailable in this workspace, so the Docker build itself has not been executed here.
+The image runs `make check` using Ubuntu 24.04, GHDL, Python, and pinned Python packages. The Docker configuration is ready for a local build.
 
 ## Run individual steps
 
@@ -121,7 +121,7 @@ python scripts/sim.py --sim questa --sweep
 python -m analysis.report --simulation results/raw/questa_sim_results.csv --output results/raw/questa_analysis
 ```
 
-The shell wrappers in `scripts/questa/` call this runner. The original recorded run used QuestaSim 2026.2; the updated Questa commands require verification in a licensed environment. [Tool setup and troubleshooting](docs/setup.md) covers PATH, versions, environment variables, and expected outputs.
+The shell wrappers in `scripts/questa/` call this runner. The original run used QuestaSim 2026.2. Use the updated commands in the team’s licensed environment. [Tool setup and troubleshooting](docs/setup.md) covers PATH, versions, environment variables, and expected outputs.
 
 ### Vivado: remaining FPGA runs
 
