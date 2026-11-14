@@ -26,11 +26,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ghdl
-          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-ci.txt
+          python -m playwright install --with-deps chromium
           ghdl --version
           python --version
       - name: Verify vectors, Python tests, RTL units, full sweep, and plots
         run: make check PYTHON=python
+      - name: Check replay controls and layout
+        run: python scripts/test_replay.py
       - name: Retain measurements, logs, and analysis
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

@@ -150,11 +150,38 @@ python -m analysis.report
 
 `--resume` skips completed runs only when source hashes match. Incomplete/mismatched existing directories require a fresh `--output-root`; the runner does not delete old evidence. Vivado and its license/device support must be installed separately. [Completion steps](docs/completion.md) explains what to inspect and commit after each run.
 
+## Watch the simulation
+
+The [offline replay](results/visualization/replay.html) lets you select a configuration, play or scrub individual clocks, and switch between three views:
+
+- **PE topology:** the real grid connections and active MACs, with each cell showing completed work for its tile.
+- **3D work surface:** PE row and column on the base; completed useful MACs on the vertical axis.
+- **3D space–time:** each point is a recorded MAC event; time runs vertically, making input-wait gaps visible.
+
+Open `results/visualization/replay.html` in your browser after cloning. It works offline. The 3D views rotate by dragging.
+
+![Completed work after sixteen clocks](results/visualization/work_surface.png)
+
+![First-tile simulation comparison](results/visualization/tile_story.gif)
+
+To regenerate everything from a fresh simulation:
+
+```bash
+python scripts/sim.py --sim ghdl --sweep --trace-dir results/raw/traces
+python -m analysis.replay --trace-dir results/raw/traces --output results/raw/visualization
+```
+
+`make check` also builds these visualizations. The replay uses the fixed-seed performance case (case 5) from each configuration. Trace validation checks every MAC event, tile completion, and stall before generating the views.
+
+The geometry has a direct meaning: surface height is completed work, the two wavefront surfaces mark each PE's first/last MAC, and the space–time gaps are grid stalls. The scaling surface joins the nine measured P/B configurations for each matrix size.
+
+Questa and Vivado also provide their own waveform and design-inspection GUIs. See [visualization notes](docs/visualization.md) for those views and the story behind the generated figures.
+
 ## CI, artifacts, and future PRs
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs automatically for **every pull request**, pushes to `main` and `oz-*` branches, and manual workflow dispatch. It installs GHDL and Python 3.12, installs the pinned requirements, and runs `make check`. GitHub Actions uses read-only repository permissions; action revisions are pinned to commit hashes.
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs automatically for **every pull request**, pushes to `main` and `oz-*` branches, and manual workflow dispatch. It installs GHDL and Python 3.12, installs the pinned requirements, and runs `make check` plus browser checks for the replay. GitHub Actions uses read-only repository permissions; action revisions are pinned to commit hashes.
 
-Open **Actions → CI → a run → Artifacts** to download the measured CSV, provenance JSON, simulator logs, report, and plots. Artifacts remain available for 30 days. Failure logs are uploaded even when a check fails. Generated reports are the build deliverable; there is no web deployment or FPGA programming step.
+Open **Actions → CI → a run → Artifacts** to download the measured CSV, provenance JSON, simulator logs, report, plots, and offline replay. Artifacts remain available for 30 days. Failure logs are uploaded even when a check fails. Generated reports are the build deliverable; there is no web deployment or FPGA programming step.
 
 After the first successful run, an administrator can make **`VHDL and analysis`** a required check in **Settings → Rules → Rulesets → main** (or branch protection). Enable “Require a pull request before merging” and require that check if you want merges blocked on failures. The workflow does not change repository rules automatically.
 

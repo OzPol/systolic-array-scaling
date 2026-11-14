@@ -1,7 +1,7 @@
 PYTHON ?= python3
 SIM ?= ghdl
 
-.PHONY: setup vectors unit rtl sweep analysis check
+.PHONY: setup vectors unit rtl sweep analysis visualization check
 setup:
 	bash scripts/bootstrap.sh
 vectors:
@@ -11,7 +11,9 @@ unit:
 rtl:
 	$(PYTHON) scripts/test_rtl.py --sim $(SIM)
 sweep:
-	$(PYTHON) scripts/sim.py --sim $(SIM) --sweep
+	$(PYTHON) scripts/sim.py --sim $(SIM) --sweep --trace-dir results/raw/traces
 analysis:
 	$(PYTHON) -m analysis.report --simulation results/raw/$(SIM)_sim_results.csv --output results/raw/analysis
-check: vectors unit rtl sweep analysis
+visualization:
+	$(PYTHON) -m analysis.replay
+check: vectors unit rtl sweep analysis visualization
