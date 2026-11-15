@@ -1,0 +1,14 @@
+{
+  "basis": "committed study measurements",
+  "simulation_configurations": 18,
+  "simulation_cases": 144,
+  "validated_traces": 18,
+  "simulation_source_commit": "0a27c589f15ee4a0a8e15b7f05409a1066b64e58",
+  "simulation_source_checksums_verified": true,
+  "simulation_csv_sha256": "4fbc16df9f9b6ca54c9f3a5ca1138866309093d62921f5053bbf1c4f04f1b6fe",
+  "hardware_configurations": 3,
+  "hardware_matrix_orders": [
+    16
+  ],
+  "all_internal_timing_met": true
+}

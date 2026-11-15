@@ -34,13 +34,23 @@ def parse_reports(directory):
             row[f'{stage}_{key}']=required(utilization,pattern,key)
         row[f'{stage}_wns_ns']=required(timing,r'WNS\(ns\).*\n.*-+.*\n\s+(-?[\d.]+)','WNS')
         row[f'{stage}_timing_met']='yes' if 'All user specified timing constraints are met' in timing else 'no'
+    summary=(directory/'timing_impl.rpt').read_text()
+    values=re.search(r'WNS\(ns\).*\n.*-+.*\n\s+([^\n]+)',summary).group(1).split()
+    row.update(impl_tns_ns=values[1], impl_whs_ns=values[4], impl_ths_ns=values[5])
+    checks=(directory/'check_timing_impl.rpt').read_text() if (directory/'check_timing_impl.rpt').exists() else summary
+    for key in ('unconstrained_internal_endpoints','no_input_delay','no_output_delay'):
+        found=re.search(r'checking '+key+r' \((\d+)\)', checks)
+        row[key]=int(found.group(1)) if found else None
+    if float(row['impl_whs_ns']) < 0 or float(row['impl_ths_ns']) < 0:
+        row['impl_timing_met']='no'
     return row
 
 
 def collect(source, destination):
     source,destination=Path(source).resolve(),Path(destination).resolve()
     destination.mkdir(parents=True,exist_ok=True)
-    for directory in sorted(source.glob('vivado_p*_n*')):
+    directories=sorted([*source.glob('vivado_p*_n*'),*source.glob('p*_n*')])
+    for directory in directories:
         metadata=directory/'run.json'
         if metadata.exists() and not json.loads(metadata.read_text()).get('completed'):
             print(f'SKIP incomplete {directory}'); continue

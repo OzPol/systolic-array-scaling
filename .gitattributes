@@ -4,3 +4,8 @@
 *.sh text eol=lf
 *.tcl text eol=lf
 tb/vectors/*.txt text eol=lf
+
+# Preserve archived measurement bytes, including vendor report formatting.
+results/verification/traces/*.csv -text
+# Preserve CSV-writer line endings and accept standard CRLF CSV records.
+results/analysis/*.csv -text whitespace=cr-at-eol

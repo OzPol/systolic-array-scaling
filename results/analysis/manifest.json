@@ -1,10 +1,48 @@
 {
-  "source_commit": "bbffed1f1b849e6d263fca1c967de88550875f82",
-  "source_dirty": false,
+  "generator_commit": "6af3ee93bc96afe41a1efed91879d7a03f302683",
+  "generator_dirty": true,
   "inputs_sha256": {
-    "results/verification/ghdl_sim_results.csv": "4fbc16df9f9b6ca54c9f3a5ca1138866309093d62921f5053bbf1c4f04f1b6fe",
-    "results/summary_vivado.csv": "4ee361907610e1c02ea8d0094e6fc10a3974e95912f707c6f291332b03625d83"
+    "results/summary_sim.csv": "78c8d73d2be0c872bc71a53b0f3dc0f82de8565f1f4f76591761888a2ae8ac16",
+    "docs/configurations.csv": "4899c0a0f58e7c7e73057380be3611d363d1b69358dc0c59c86b0ea041e0d23d",
+    "results/summary_vivado.csv": "4ee361907610e1c02ea8d0094e6fc10a3974e95912f707c6f291332b03625d83",
+    "summary_vivado.csv": "1c0ddeed435ec3950f551aded4d64d56ffd3e2dc62db7467fd3af02b2e82f617"
   },
   "measured_configurations": 18,
-  "missing_vivado_p": []
+  "measured_hardware_configurations": 3,
+  "hardware_matrix_orders": [
+    16
+  ],
+  "missing_hardware_configurations": [],
+  "clock_period_ns": 10.0,
+  "evidence": {
+    "basis": "committed study measurements",
+    "simulation_configurations": 18,
+    "simulation_cases": 144,
+    "validated_traces": 18,
+    "simulation_source_commit": "0a27c589f15ee4a0a8e15b7f05409a1066b64e58",
+    "simulation_source_checksums_verified": true,
+    "simulation_csv_sha256": "4fbc16df9f9b6ca54c9f3a5ca1138866309093d62921f5053bbf1c4f04f1b6fe",
+    "hardware_configurations": 3,
+    "hardware_matrix_orders": [
+      16
+    ],
+    "all_internal_timing_met": true
+  },
+  "basis": "committed study",
+  "generator_sha256": {
+    "analysis/model.py": "0320c466e4506de34079a2ee3c6b1086713b0080c31575c0cddfd28330681516",
+    "analysis/report.py": "9b4f942876d6cbdd7407cc10c5ebab6218f50d6b719da9fe3863ea9e2178c87c",
+    "analysis/plots.py": "85242ad87305d91804478da6db253767149e6324d9e1a6ebb810c396ba00afc4",
+    "analysis/writing.py": "d367578d6ce1eb4d35a255baa12e505b72388155c9a8c76285d97819489afa69",
+    "analysis/evidence.py": "9eea2f67d5aff57a78d95121018b6435e9eb0e7d45558e330f91285f0b5c1c21",
+    "analysis/study.py": "543671d1fb64f495e19bdf7480edc758b1a777763e48e31d12c786ab19f613ee",
+    "analysis/replay.py": "5e4e79b3e2f224d38e2054cf1e95f47493390777c795d0fe5868493362076067",
+    "analysis/trace_figures.py": "38c2ff7abae35c519cc2e812ec58a1284cc54882006645cd30c0acfaefb892e6",
+    "scripts/experiment.py": "2c97c9143ca1670086bd282dbf26923a5d683c8f9eb1d9f8c827219f4d892a6a",
+    "scripts/collect_vivado.py": "6e79c49433e91acb521371f2d194042f9774f3765485e355f52194c1ac9954ef",
+    "scripts/build_documents.py": "971197da7040c92544f5add1b989cc1e1456991d6ed643dd68059e17f4489c74",
+    "deliverables/report/main.tex": "eb95289a8568a22816e0db020fe896515f7b01037b8e74a17035464207239f60",
+    "deliverables/presentation/slides.tex": "ce00e9f30bb148261a725e13e8de0879408b3c89eb3c82eb06cb82ad1dae59b3",
+    "requirements.txt": "7e8292bfa0a4937938afa4994471f4b7c3d39a171dad937228a4d1f9e7671cd1"
+  }
 }

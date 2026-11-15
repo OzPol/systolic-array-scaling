@@ -103,10 +103,8 @@ That **does not mean** the 8×8 grid has no advantage. It has 64 PEs, so it may 
 
 The project guidelines explicitly include **systolic-array grid scaling versus input-bandwidth limits** as a suggested domain-acceleration topic. They prefer gem5 but allow a justified HDL prototype. VHDL is appropriate here because the question depends on the **actual placement of arithmetic units, cycle-by-cycle data movement, and correct stall behavior**. Questa tests those behaviors; Vivado estimates the implementation cost on the KV260 FPGA target. The proposal does **not** require buying or programming a board.
 
-## What the completed study found
+## Measured study
 
-For N=16/B=16, the three grids take 1216, 368, and 124 compute clocks. All three routed implementations meet the constrained internal 10 ns target, using 4, 16, and 64 DSPs. The 8×8 is fastest in every tested case, while useful throughput per DSP falls as the grid grows. Input-budget stalls and finite-workload fill/drain overhead explain the sublinear scaling.
-
-The findings and figures use actual simulation and Vivado records. See the [measured analysis](../results/analysis/report.md), [report PDF](../deliverables/report/main.pdf), and [submitted proposal](eel5764_systolic_array_project_proposal.pdf).
+The [generated analysis](../results/analysis/report.md) contains the current tables and findings for both matrix sizes, all PE grids, and all modeled input budgets. It separates computation from serial readout and pairs each workload with the matching FPGA implementation. The [report PDF](../deliverables/report/main.pdf) develops the architectural explanation.
 
 The experiment does not measure actual KV260 DRAM bandwidth, CPU-versus-accelerator speedup, or power consumption. The mathematical definition, tile-origin convention, and physical-versus-enabled clock distinction are documented in [architecture.md](architecture.md).

@@ -35,6 +35,7 @@ def build(trace_dir, output, figures=True):
     (output/'traces.json').write_text(data+'\n')
     (output/'replay-fragment.html').write_text(fragment)
     (output/'replay.html').write_text('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Systolic array RTL replay</title><style>'+STANDALONE_STYLE+'</style></head><body>'+fragment+'</body></html>')
+    (output/'README.md').write_text((ROOT/'visualization/replay-readme.md.template').read_text())
     if figures:
         from .trace_figures import render
         render(traces,output)
@@ -44,10 +45,13 @@ def build(trace_dir, output, figures=True):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--trace-dir',type=Path,default=Path('results/raw/traces'))
-    parser.add_argument('--output',type=Path,default=Path('results/raw/visualization'))
+    parser.add_argument('--trace-dir',type=Path,help='defaults to the selected archived run')
+    parser.add_argument('--output',type=Path,help='defaults to a new timestamped visualization directory')
     parser.add_argument('--no-figures',action='store_true')
-    args=parser.parse_args();build(args.trace_dir,args.output,not args.no_figures)
+    args=parser.parse_args()
+    from scripts.run_utils import new_run
+    selected=json.loads((ROOT/'results/selected.json').read_text())
+    build(args.trace_dir or ROOT/selected['traces'],args.output or new_run(prefix='visualization')/'visualization',not args.no_figures)
 
 
 if __name__=='__main__':main()

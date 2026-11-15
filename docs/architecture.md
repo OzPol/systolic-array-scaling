@@ -55,7 +55,7 @@ The next tile must not clear PE state until the preceding tile's last MAC has co
 
 The experiment selects a budget $B\in\{4,8,16\}$ **combined $A/B$ words per clock**. A full boundary step can request at most $2P$ words, although fill and drain steps can request fewer. The stager accumulates that step's valid words; the grid advances exactly once when the step is complete. While staging is incomplete, every PE's accumulator, forwarded data, and valid state hold. During a drain step with no new boundary words, the grid advances normally.
 
-The implemented interface uses a runtime budget setting in synthesizable staging logic, with the same maximum-width input interface for all three budget settings. The testbench supplies operands and also checks that the RTL enforces $B$ and holds state correctly. This allows Vivado to compare **three grid implementations** while the simulation varies $B$ on each implementation. The input budget is a modeled interface limit, not a measured KV260 memory rate.
+The implemented interface uses a runtime budget setting in synthesizable staging logic, with the same maximum-width input interface for all three budget settings. The testbench supplies operands and also checks that the RTL enforces $B$ and holds state correctly. The reported hardware comparison uses **three N=16 implementations**. The automated complete-study command builds all six grid/matrix pairs for new experiments; $B$ remains a runtime setting. The input budget is a modeled interface limit, not a measured KV260 memory rate.
 
 At full supply ($B\ge 2P$), the stager completes the incoming step on the same clock. It adds no extra staging clock.
 
@@ -96,7 +96,7 @@ Simulation exposes `cnt_compute`, `cnt_total`, `cnt_stall`, `cnt_adv`, `cnt_cap`
 
 ## Result storage and synthesis evidence
 
-Each capture writes $P^2$ output elements into the $N^2$-element store. This multiwrite structure maps to registers in all three Vivado runs, with 9,216 storage bits at N=16. Changing it to BRAM would change the design and capture schedule. All three measured implementations report zero BRAM.
+Each capture writes $P^2$ output elements into the $N^2$-element store. The selected implementations map this multiwrite structure to registers. Storage capacity is N²×36 bits: 2,304 bits at N=8 and 9,216 bits at N=16. Changing it to BRAM would change the design and capture schedule. The generated hardware table reports the three measured N=16 implementations.
 
 All three reports constrain internal paths at 10 ns but leave external input/output delays unspecified. The synthesis-mode equivalence regression compares requests, values, and readout/completion timing against the instrumented design. This regression checks the two RTL configurations.
 

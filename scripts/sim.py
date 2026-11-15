@@ -12,6 +12,9 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT))
+from analysis.study import CORE
+from scripts.run_utils import new_run
 SOURCES = ['rtl/sys_pkg.vhd', 'rtl/pe.vhd', 'rtl/systolic_array.vhd',
            'rtl/input_stager.vhd', 'rtl/systolic_top.vhd', 'tb/tb_systolic.vhd']
 HEADER = 'P,N,B,case,pass,compute,total,stall,adv,cap,macs\n'
@@ -63,8 +66,8 @@ def main():
     executable = os.environ.get('GHDL', 'ghdl') if sim == 'ghdl' else 'vsim'
     if not shutil.which(executable):
         parser.error(f'{executable} is not installed or not on PATH')
-    configs = [(p, n, b) for n in (8, 16) for p in (2, 4, 8) for b in (4, 8, 16)] if args.sweep else [(args.p, args.n, args.b)]
-    output = (args.output or ROOT / 'results/raw' / f'{sim}_sim_results.csv').resolve()
+    configs = [(p,n,b) for n,p,b in sorted(CORE)] if args.sweep else [(args.p, args.n, args.b)]
+    output = (args.output or new_run() / f'{sim}_sim_results.csv').resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(HEADER)
     if args.trace_dir:

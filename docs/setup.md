@@ -1,106 +1,84 @@
-# Development setup and troubleshooting
+# Development setup
 
-The [README](../README.md) contains the complete first-run path. Use Linux/WSL2 with Python 3.12 and GHDL for the open-source checks. All commands below run at the repository root with the virtual environment active.
+## Analyze archived evidence
 
-## Tool records
+Python 3.12+ is required for the pinned plotting packages. Python 3.10 can run the standard-library simulation and Vivado wrappers, but it cannot install the complete pinned analysis environment.
 
-| Tool | Evidence and scope |
-|---|---|
-| Python | Clean Python 3.12 environment installed from `requirements.txt` and passed the open-source workflow |
-| GHDL | Independent rerun: GHDL 5.0.1, Debian mcode/GNAT 14.2.0; CI installs the Ubuntu 24.04 package and records its actual version |
-| Questa | Original Thomas run: Questa Sim-64 2026.2 win64 May 18 2026; `vcom -2008` / `vsim -c` |
-| Vivado | All three Thomas runs: 2025.2.1, SW Build 6403652, Windows; Vivado is unnecessary to regenerate the committed analysis |
-| Vivado part | `xck26-sfvc784-2LV-c` (KV260 SOM target) |
-| Flow | Out-of-context synth, opt, place, route; one thread; default directives; no board programming |
-| Arithmetic and RTL | VHDL-2008; signed 16-bit input, 36-bit exact result; N≤16 |
-| Clock | 10 ns, `constraints/clk_10ns.xdc` |
-| Dependencies | Pinned Python plotting dependency set in `requirements.txt`; simulation and CSV validation use stdlib |
-
-Record local versions before reporting new evidence:
+On Ubuntu with Python 3.12 already installed:
 
 ```bash
-python --version
-ghdl --version
-git rev-parse HEAD
-git status --short
-```
-
-For repeatable measurements, run from a clean checkout. The simulator records the commit and file hashes with each run.
-
-## Open-source setup details
-
-`bash scripts/bootstrap.sh --install-system` uses apt with sudo on Ubuntu/Debian, then creates `.venv` and installs `requirements.txt`. Sudo is only needed for system tools. The script does not install licensed software.
-
-For later terminal sessions:
-
-```bash
-cd ~/systolic-array-scaling
+python3.12 -m venv .venv
 source .venv/bin/activate
-make check
+python -m pip install -r requirements.txt
+python scripts/experiment.py
 ```
 
-If GHDL has a custom location, set `GHDL` to its executable path before running the Python scripts. Standard package installations do not require `GHDL_PREFIX` or `LD_LIBRARY_PATH` overrides.
-
-`make check` requires GHDL by default. `make check SIM=questa` uses the licensed simulator but retains the same vector/test/analysis workflow.
-
-## Questa
-
-Install the course-supported Questa version and configure its licensing as directed by the course. Where the course license requires GatorLink VPN and `SALT_LICENSE_SERVER`, use the actual server value provided by the course; no server address or credentials are stored here.
-
-Confirm the executables are available:
+On Ubuntu 22.04, a managed interpreter avoids replacing the system Python:
 
 ```bash
-vlib -version
-vcom -version
-vsim -version
+curl -LsSf https://astral.sh/uv/install.sh | sh
+"$HOME/.local/bin/uv" venv --python 3.12 --seed .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
-Then run the README's Questa commands. Compile order is `sys_pkg`, `pe`, `systolic_array`, `input_stager`, `systolic_top`, then testbenches. The runner uses VHDL-2008, stops on tool failures, checks a PASS marker, and validates all expected case rows. It no longer hides errors through a shell `|| true` pipeline.
+`PYTHON=python3.12 bash scripts/bootstrap.sh` is also available. The bootstrap script accepts `--install-system` for Ubuntu/Debian GHDL, make, git, and venv packages. On Ubuntu 22.04 that package installation does not itself upgrade Python to 3.12.
 
-If your simulator presents an interactive finish prompt, configure batch execution to finish/exit rather than wait. Keep the completion marker and CSV checks enabled; a tool returning zero alone is insufficient evidence.
-
-## Vivado
-
-Install Vivado with support for the K26 device and the required license. Keep installation/licensing configuration outside the repository. On Linux, source the `settings64.sh` belonging to your actual installation. On Windows, use a terminal with Vivado's `bin` on PATH. Python can drive the same batch Tcl flow on either platform.
-
-Check the installation:
+## Simulation
 
 ```bash
+sudo apt-get update
+sudo apt-get install -y ghdl make git
+python scripts/test_rtl.py --sim ghdl
+python scripts/sim.py --sim ghdl --sweep
+```
+
+The simulator allocates a unique timestamped run directory when no output path is supplied. `make study` keeps simulation, traces, all six configured FPGA builds, and analysis under one automatically generated run ID.
+
+The committed independent verification used GHDL 5.0.1. Its 144 passing cases agree with the simulation-summary counters. The original licensed sweep used QuestaSim 2026.2. The evidence records actual tool versions rather than assuming that an installed package matches another platform's package version.
+
+For Questa, configure `vlib`, `vcom`, and `vsim` using the provided licensed installation. Then use `python scripts/sim.py --sim questa --sweep`. License-server configuration belongs in the local environment.
+
+## FPGA implementation
+
+The published FPGA reports used Vivado 2025.2.1, SW Build 6403652, on Windows, targeting `xck26-sfvc784-2LV-c`. For new measurements in Ubuntu, install Vivado ML Standard with **Kria SOMs and Starter Kits** support. The Vivado installer includes Vitis HLS as part of the selected design-tool bundle.
+
+The tools and repository can occupy different directories. Activate the installed tools before starting a build:
+
+```bash
+source "$HOME/AMDDesignTools/2025.2.1/Vivado/settings64.sh"
 vivado -version
+python scripts/vivado/run.py
 ```
 
-Use `python scripts/vivado/run.py --help` for configuration and destination options. A single run may be launched directly through Tcl:
+The default sweep includes every grid and matrix size from `docs/configurations.csv`, executing one build at a time. Narrow a debugging run with `--p 4 --n 8`, or select several matrix sizes with `--n 8 16`. `--output-root` selects a shared destination. The wrapper preserves completed runs and rejects an occupied incomplete/mismatched destination.
+
+If the installer requests OS libraries, run its own `Vivado/scripts/installLibs.sh` with sudo. If Vivado reports a missing `en_US.UTF-8` locale:
 
 ```bash
-vivado -mode batch -nojournal -nolog -source scripts/vivado/synth.tcl -tclargs 4 16
+sudo locale-gen en_US.UTF-8
 ```
 
-The Python wrapper is preferred because it retains console logs, records hashes, and requires a completion marker plus all four core utilization/timing reports. It also retains routed checkpoints for later inspection; checkpoints stay in ignored raw directories.
+The batch flow retains a routed checkpoint, utilization/timing reports, DRC and methodology reports, and console output. `run.json` records source identity, parameters, completion, wall duration, and the launched command for new runs. Checkpoints remain outside ordinary Git history.
 
-For a future run through the current wrapper, inspect (the original committed runs predate the extra diagnostic files and run manifest):
+## Report and presentation
 
-1. `console.txt`: synthesis, optimization, placement, and routing completed without errors.
-2. `util_impl.rpt`: post-route LUTs, FFs, DSPs, BRAM.
-3. `timing_impl.rpt`: WNS/TNS, hold checks, and unconstrained paths.
-4. `check_timing_impl.rpt`, `drc_impl.rpt`, `methodology_impl.rpt`: remaining violations and warnings.
-5. `run.json`: source hash/commit, correct P/N/part, and `completed=true`.
+Use Tectonic or a complete pdfLaTeX distribution containing IEEEtran, Beamer, TikZ, booktabs, and the standard Times/Helvetica fonts. On Ubuntu, the relevant packages are `texlive-publishers`, `texlive-latex-extra`, `texlive-pictures`, and `texlive-fonts-recommended`. Then:
 
-The P=2/4/8 post-route reports give +3.955/+3.786/+2.176 ns WNS for the constrained internal paths. The current OOC setup leaves external input/output delays unspecified; board I/O timing would be a separate implementation step.
+```bash
+python scripts/experiment.py --publish
+```
+
+Analysis from an existing run does not require GHDL or Vivado. Complete new measurements require both. All rates at 100 MHz are conditional calculations from cycle counts and successful internal timing, rather than board measurements.
 
 ## Troubleshooting
 
 | Symptom | Action |
 |---|---|
-| `ghdl` not found | Run bootstrap with `--install-system`; verify `command -v ghdl` |
-| `venv` creation fails on Ubuntu | Install `python3-venv`; use Python 3.12 |
-| `matplotlib` import fails | Activate `.venv`; run `python -m pip install -r requirements.txt` |
-| Vector/manifest mismatch | Inspect `git diff -- tb/vectors`; regenerate only if intentional; rerun `--check` |
-| Simulator compile/assertion failure | Read `build/<sim>/compile.txt` or per-configuration log; do not use partial CSV as a complete sweep |
-| `missing configurations` in analysis | Run the full sweep or provide the reviewed 18-row summary; a smoke run is intentionally rejected |
-| Vivado missing from PATH | Use its configured terminal or source its actual settings script |
-| Vivado reports an existing directory | Use a fresh `--output-root`, or `--resume` for a completed run with identical hashes |
-| Vivado memory pressure | Run P values sequentially; the provided wrapper already does this |
-| CSV/report does not change after a Vivado run | Run `scripts/collect_vivado.py` for the correct source directory, then regenerate analysis |
-| GitHub cannot find a required check | Let CI complete once, then select `VHDL and analysis` in the main-branch ruleset |
-
-The Linux/GHDL workflow and report parsers have been tested. Docker and macOS are alternative setups; Questa and Vivado run in the licensed team environment.
+| Python 3.10 selected for plotting | Create the Python 3.12 environment above |
+| `libXtst.so.6` missing | Install `libxtst6`, then relaunch the installer |
+| Locale initialization error | Generate `en_US.UTF-8` |
+| Vivado unavailable | Source the installation's actual `settings64.sh` |
+| Existing output directory | Use the automatically allocated destination or a matching `--resume` |
+| Incomplete evidence | Read that configuration's `console.txt`; partial runs cannot replace the reviewed analysis |
+| Timing disagreement | Inspect both setup and hold slack, and the unconstrained-path checks |

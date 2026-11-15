@@ -1,21 +1,21 @@
-# IEEE report source
+# IEEE report
 
-[The report PDF](main.pdf) and [editable LaTeX source](main.tex) cover all 18 simulation configurations and all three measured post-route FPGA implementations. The report separates constrained internal timing from board I/O timing and compares useful throughput per measured DSP.
+[main.pdf](main.pdf) and its editable [LaTeX source](main.tex) describe all 18 simulation configurations and the three N=16 post-route FPGA implementations. The main text covers architecture, verification, cycle accounting, scaling, throughput, resources, related work, and timing scope. The appendix contains both complete activity atlases.
 
-To reproduce the figures and PDF:
+The source inserts generated tables and numeric values from `results/analysis/`. Grid-to-grid comparisons and speedup plots use the matching 2×2 RTL configuration as their reference. ASIC energy, CPU speedup, pruning, and application accuracy from related work are not measurements of this project.
 
-1. Activate the project's Python environment and run `python -m analysis.report --simulation results/verification/ghdl_sim_results.csv` from the repository root.
-2. Use the committed Vivado reports under `results/vivado/` and `results/summary_vivado.csv`; no new Vivado run is needed.
-3. Compile with a TeX distribution containing `IEEEtran`, `amsmath`, `amssymb`, `booktabs`, `graphicx`, and `hyperref`:
+From the repository root, refresh the selected analysis and both PDFs together:
 
 ```bash
-cd deliverables/report
-mkdir -p ../../build
-pdflatex -interaction=nonstopmode -halt-on-error -output-directory=../../build main.tex
-pdflatex -interaction=nonstopmode -halt-on-error -output-directory=../../build main.tex
-cp ../../build/main.pdf main.pdf
+python scripts/experiment.py --publish
 ```
 
-4. Inspect every rendered page, equation, table, and plot label before submission. The [course guidelines](../../docs/eel5764_project_guidelines_fall_2026.pdf) specify an IEEE double-column paper.
+This needs the pinned Python environment and Tectonic or a complete pdfLaTeX distribution with IEEEtran, Beamer, TikZ, booktabs, and standard Times/Helvetica fonts. GHDL and Vivado are unnecessary when analyzing the archived evidence. The workflow builds in a temporary location before replacing current generated views.
 
-Upload the source and generated plot PNGs to an IEEE conference project in a LaTeX editor if you prefer that workflow. Keep the relative figure paths consistent with your project's root.
+To compile only the documents against existing generated results:
+
+```bash
+python scripts/build_documents.py
+```
+
+That writes `build/documents/report.pdf` and `build/documents/presentation.pdf`. Direct compilation of `main.tex` also works from this directory with a complete LaTeX installation. Inspect rendered pages before distributing a changed report.

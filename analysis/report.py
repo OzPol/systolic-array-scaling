@@ -6,9 +6,9 @@ import json
 from pathlib import Path
 import subprocess
 from .model import predict
+from .study import CORE, CLOCK_NS, HARDWARE_CONFIGS
 
 ROOT = Path(__file__).resolve().parents[1]
-CORE = {(n, p, b) for n in (8, 16) for p in (2, 4, 8) for b in (4, 8, 16)}
 
 
 def load_measurements(path):
@@ -55,6 +55,9 @@ def load_measurements(path):
             'macs_per_cycle': n**3/compute,
             'pe_utilization': n**3/(p*p*compute),
             'speedup_vs_2x2': baseline/compute,
+            'end_to_end_speedup_vs_2x2': predict(n,2,b).total_cycles/values['total_cycles'],
+            'compute_time_us_100mhz': compute*CLOCK_NS/1000,
+            'total_time_us_100mhz': values['total_cycles']*CLOCK_NS/1000,
             'scaling_efficiency': baseline/compute/(p*p/4),
             'stall_fraction': model.stall_cycles/compute,
             'readout_fraction_of_total': n*n/values['total_cycles'],
@@ -79,7 +82,7 @@ def load_hardware(path):
                 raise ValueError(f'negative resource count: {row}')
         if row['impl_timing_met'] not in ('yes', 'no'):
             raise ValueError(f'missing timing outcome: {row}')
-        if row['impl_timing_met'] == 'yes' and float(row['impl_wns_ns']) < 0:
+        if row['impl_timing_met'] == 'yes' and any(float(row.get(k,0)) < 0 for k in ('impl_wns_ns','impl_whs_ns','impl_ths_ns')):
             raise ValueError(f'inconsistent timing result: {row}')
     return rows
 
@@ -92,136 +95,74 @@ def table(rows, fields):
 
 
 def generate(simulation, hardware, output, plots=True):
+    from .writing import write_results
     measurements = load_measurements(simulation)
     resources = load_hardware(hardware)
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
-    with (output/'metrics.csv').open('w', newline='') as stream:
-        writer = csv.DictWriter(stream, fieldnames=list(measurements[0]))
-        writer.writeheader()
-        writer.writerows(measurements)
-    missing = [p for p in (2, 4, 8) if not any(int(r['P']) == p and int(r['N']) == 16 for r in resources)]
-    by_cfg = {(r['N'], r['P'], r['B']): r for r in measurements}
-    wide = by_cfg[(16, 8, 16)]
-    limited = by_cfg[(16, 8, 4)]
-    q = by_cfg[(16, 8, 8)]
-    hardware_metrics = []
+    by_cfg = {(r['N'],r['P'],r['B']):r for r in measurements}
+    hardware_metrics=[]
     for hw in resources:
-        n, p = int(hw['N']), int(hw['P'])
-        for b in (4, 8, 16):
-            measured = by_cfg.get((n, p, b))
-            if measured is None:
-                continue
-            dsps = int(hw['impl_dsps'])
+        n,p=int(hw['N']),int(hw['P'])
+        if (n,p) not in HARDWARE_CONFIGS:
+            raise ValueError(f'unexpected hardware configuration {(n,p)}')
+        for b in (4,8,16):
+            measured=by_cfg[(n,p,b)]
+            dsps=int(hw['impl_dsps'])
+            timing_ok=(hw['impl_timing_met']=='yes' and float(hw.get('impl_whs_ns',0))>=0)
             hardware_metrics.append({
-                'N': n, 'P': p, 'B': b,
-                'compute_cycles': measured['compute_cycles'],
-                'macs_per_cycle': measured['macs_per_cycle'],
-                'impl_luts': int(hw['impl_luts']), 'impl_ffs': int(hw['impl_ffs']),
-                'impl_dsps': dsps, 'impl_bram_tiles': float(hw['impl_bram_tiles']),
-                'impl_wns_ns': float(hw['impl_wns_ns']),
-                'macs_per_cycle_per_dsp': measured['macs_per_cycle']/dsps if dsps else None,
+                'N':n,'P':p,'B':b,'compute_cycles':measured['compute_cycles'],
+                'total_cycles':measured['total_cycles'],'macs_per_cycle':measured['macs_per_cycle'],
+                'impl_luts':int(hw['impl_luts']),'impl_ffs':int(hw['impl_ffs']),
+                'impl_dsps':dsps,'impl_bram_tiles':float(hw['impl_bram_tiles']),
+                'impl_wns_ns':float(hw['impl_wns_ns']),'impl_timing_met':hw['impl_timing_met'],
+                'macs_per_cycle_per_dsp':measured['macs_per_cycle']/dsps if dsps else None,
+                'modeled_compute_gmac_s_100mhz':measured['macs_per_cycle']/CLOCK_NS if timing_ok else None,
+                'modeled_total_gmac_s_100mhz':n**3/measured['total_cycles']/CLOCK_NS if timing_ok else None,
+                'modeled_compute_gops_100mhz':2*measured['macs_per_cycle']/CLOCK_NS if timing_ok else None,
+                'modeled_products_s_100mhz':1e9/CLOCK_NS/measured['total_cycles'] if timing_ok else None,
             })
-    if hardware_metrics:
-        with (output/'hardware_metrics.csv').open('w', newline='') as stream:
-            writer = csv.DictWriter(stream, fieldnames=list(hardware_metrics[0]), lineterminator='\n')
-            writer.writeheader()
-            writer.writerows(hardware_metrics)
-    else:
-        (output/'hardware_metrics.csv').unlink(missing_ok=True)
-    hardware_status = ('All three N=16 grid implementations have measured post-route evidence.'
-                       if not missing else 'Only the configurations listed above have measured FPGA evidence.')
-    hardware_comparison = '''At N=16/B=16, the measured four-, sixteen-, and sixty-four-DSP designs deliver 3.368, 11.130,
-and 33.032 useful MACs per compute clock: 0.842, 0.696, and 0.516 MACs per clock per DSP.
-The largest array is fastest, while the smallest has the highest useful throughput per DSP for these workloads.
-LUT usage is not monotonic: the 4x4 uses 11,488 LUTs and the 8x8 uses 8,166. Retain this measured result;
-resource mapping and control/storage logic cannot be inferred from PE count alone.''' if not missing else (
-        'The three-grid hardware comparison requires the missing implementation reports; no resource values are inferred.')
-    md = f'''# Measured scaling analysis
-
-Simulation input: `{Path(simulation).as_posix()}`. Every configuration is checked for eight passing cases,
-exact N^3 useful MACs, data-independent counters, complete readout, and agreement with a separate cycle model.
-The cycle model cross-checks the recorded simulation counts.
-
-## Findings
-
-- At N=16, B=16, compute cycles are 1216 / 368 / 124 for P=2/4/8. The 8×8 achieves {wide['speedup_vs_2x2']:.3f}× speedup with 16× as many PEs: {wide['scaling_efficiency']:.1%} scaling efficiency.
-- At N=16, P=8, lowering B from 16 to 8 adds {q['stall_cycles']} stalls (124 → 184 cycles); lowering it to 4 adds {limited['stall_cycles']} stalls (124 → 304 cycles). B=4 costs {limited['compute_cycles']/wide['compute_cycles']:.3f}× the fully supplied compute latency.
-- At B=4, P=8 is still 2× faster than P=4 for both matrix sizes. The input limit reduces the benefit of scaling; these measurements do not establish a point where a larger array stops helping.
-- At full supply, N=16/P=8 has 64 useful-equivalent cycles, 56 fill/drain cycles, and 4 capture cycles. Thus {wide['pe_utilization']:.1%} PE utilization is explained by the finite workload and per-tile schedule even without budget stalls.
-- For N=8/P=8/B=16, compute takes 23 clocks but serial readout adds 64. Compute speedup and end-to-end speedup answer different questions; readout is identical across P for a given N.
-
-## Cycle accounting
-
-For each tile, the grid advances N+2P−2 times and uses one capture clock.
-For boundary step t, w(t)=2·count{{i: 0≤t−i<N, 0≤i<P}} words are needed.
-Stalls are sum(max(0, ceil(w(t)/B)−1)) over all steps and tiles.
-Compute = useful-equivalent + fill/drain + capture + stalls; total = compute + N² readout.
-
-“Useful-equivalent” is N³/P², the capacity-normalized MAC work. This is an accounting decomposition,
-not a claim that useful MACs happen exclusively in a separate block of clocks. Useful MACs overlap fill/drain.
-
-{table(measurements, ['N','P','B','compute_cycles','stall_cycles','useful_equivalent_cycles','fill_drain_cycles','capture_cycles','pe_utilization','speedup_vs_2x2'])}
-
-## FPGA evidence
-
-{table(resources, ['P','N','impl_luts','impl_ffs','impl_dsps','impl_bram_tiles','impl_wns_ns','impl_timing_met']) if resources else 'No post-route FPGA reports are available.'}
-
-Missing N=16 hardware configurations: {', '.join('P='+str(p) for p in missing) or 'none'}.
-{hardware_status}
-Thomas Martin produced the three Vivado 2025.2.1 runs using the same part, 10 ns clock,
-INSTR=false setting, and out-of-context synth/opt/place/route flow. His reports and console logs are retained unchanged.
-The evidence predates the analysis follow-up: the only RTL change is a reset/clear mask on an activity signal
-that is unused with INSTR=false. The datapath, controller, stager, and clock constraint are unchanged.
-The out-of-context reports leave external input/output delays unspecified (71/63 ports at P=2,
-135/67 at P=4, and 263/74 at P=8). No unconstrained internal endpoints are reported.
-The reported slack covers the constrained internal paths; board I/O timing is a separate implementation step.
-The registered result store uses 9216 bits for N=16 and dominates FF use; zero BRAM is a measured mapping outcome.
-The study compares RTL cycle behavior and FPGA implementation cost.
-
-## Throughput per measured DSP
-
-{table(hardware_metrics, ['P','B','compute_cycles','impl_dsps','macs_per_cycle','macs_per_cycle_per_dsp']) if hardware_metrics else 'Awaiting measured DSP counts; no hardware values are inferred.'}
-
-These ratios pair simulated complete-product throughput with actual post-route DSP counts.
-They exclude serial readout, external data transfer, and software overhead. They are not board measurements.
-{hardware_comparison}
-
-## Figures
-
-- `latency.png` / `.svg`: compute latency by grid, workload, and input budget.
-- `utilization.png` / `.svg`: useful PE utilization with the same comparisons.
-- `cycle_breakdown.png` / `.svg`: useful-equivalent work, fill/drain, capture, and budget stalls.
-- `throughput_vs_dsp.png` / `.svg`: throughput paired with the collected FPGA DSP counts.
-- `fpga_resources.png` / `.svg`: post-route LUTs, FFs, DSPs, and BRAM for all measured grids.
-- `hardware_metrics.csv`: simulated throughput and useful throughput per measured DSP for each N=16 grid/budget pair.
-- [8×8 matrix activity atlas](../visualization/activity_matrix08.png): all nine grid/budget combinations.
-- [16×16 matrix activity atlas](../visualization/activity_matrix16.png): all nine grid/budget combinations.
-
-Each atlas has PE grids 2×2, 4×4, and 8×8 down the rows and budgets 4, 8, and 16 across the columns. Color shows useful MACs per PE per clock in four-clock bins. Together they cover all 18 configurations.
-'''
-    (output/'report.md').write_text(md)
-    paths = [Path(simulation), Path(hardware)]
-    manifest = {'source_commit': subprocess.check_output(['git','rev-parse','HEAD'], cwd=ROOT, text=True).strip(),
-                'source_dirty': bool(subprocess.check_output(['git','status','--porcelain','--','rtl','tb','scripts','analysis','visualization','constraints','Makefile','requirements.txt','requirements-ci.txt','.github'], cwd=ROOT, text=True).strip()),
-                'inputs_sha256': {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.exists()},
-                'measured_configurations': len(measurements), 'missing_vivado_p': missing}
-    (output/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')
+    for name,rows in [('metrics.csv',measurements),('hardware_metrics.csv',hardware_metrics)]:
+        if rows:
+            with (output/name).open('w',newline='') as stream:
+                writer=csv.DictWriter(stream,fieldnames=list(rows[0]),lineterminator='\n')
+                writer.writeheader();writer.writerows(rows)
+    hardware_orders=sorted({int(r['N']) for r in resources})
+    expected_hardware={(n,p) for n in hardware_orders for p in (2,4,8)}
+    missing=sorted(expected_hardware-{(int(r['N']),int(r['P'])) for r in resources})
+    write_results(measurements,resources,hardware_metrics,output,simulation,missing)
+    paths=[Path(simulation),Path(hardware),ROOT/'docs/configurations.csv']
+    manifest={'generator_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+              'generator_dirty':bool(subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True).strip()),
+              'inputs_sha256':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.exists()},
+              'measured_configurations':len(measurements),'measured_hardware_configurations':len(resources),
+              'hardware_matrix_orders':hardware_orders,'missing_hardware_configurations':missing,'clock_period_ns':CLOCK_NS}
+    (output/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     if plots:
         from .plots import render
-        render(measurements, resources, output)
+        render(measurements,resources,output)
     return measurements
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--simulation', type=Path, default=Path('results/summary_sim.csv'))
-    parser.add_argument('--hardware', type=Path, default=Path('results/summary_vivado.csv'))
-    parser.add_argument('--output', type=Path, default=Path('results/analysis'))
+    parser.add_argument('--simulation', type=Path, help='explicit CSV input; also provide --hardware')
+    parser.add_argument('--hardware', type=Path, help='explicit hardware CSV; also provide --simulation')
+    parser.add_argument('--output', type=Path, help='defaults to a new timestamped analysis directory')
     parser.add_argument('--no-plots', action='store_true')
     args = parser.parse_args()
-    generate(args.simulation, args.hardware, args.output, not args.no_plots)
-    print(f'Validated 18 configurations; wrote {args.output}')
+    from scripts.run_utils import new_run
+    output=args.output or new_run(prefix='analysis')/'analysis'
+    if output.resolve()==ROOT/'results/analysis':
+        parser.error('Use scripts/experiment.py --publish to refresh the selected deliverables together')
+    if args.simulation is None and args.hardware is None:
+        from scripts.experiment import refresh
+        refresh(None,output,with_replay=False,plots=not args.no_plots)
+        return
+    if args.simulation is None or args.hardware is None:
+        parser.error('Explicit CSV analysis needs both --simulation and --hardware; omit both to use the selected run')
+    generate(args.simulation, args.hardware, output, not args.no_plots)
+    print(f'Validated {len(CORE)} configurations; wrote {output}')
 
 
 if __name__ == '__main__':

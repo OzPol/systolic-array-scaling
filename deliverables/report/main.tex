@@ -1,151 +1,275 @@
 \documentclass[conference]{IEEEtran}
-\usepackage{amsmath,amssymb,booktabs,graphicx}
+\usepackage{amsmath,amssymb,booktabs,graphicx,tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
 \usepackage[hidelinks]{hyperref}
-\hypersetup{pdftitle={Systolic Array Scaling Under Modeled Input Bandwidth Limits},
-pdfauthor={Ozlem Polat, Thomas Martin, Keith Kamer}}
-\graphicspath{{results/analysis/}{../../results/analysis/}}
+\providecommand{\AnalysisPath}{../../results/analysis}
+\providecommand{\TracePath}{../../results/visualization}
+\graphicspath{{\AnalysisPath/}{\TracePath/}}
+\input{\AnalysisPath/numbers.tex}
+\hypersetup{pdftitle={Systolic Array Scaling Under Modeled Input Bandwidth Limits},pdfauthor={Ozlem Polat, Thomas Martin, Keith Kamer}}
 \title{Systolic Array Scaling Under Modeled Input Bandwidth Limits}
-\author{\IEEEauthorblockN{Ozlem Polat, Thomas Martin, and Keith Kamer}
-\IEEEauthorblockA{University of Florida\\EEL5764 Computer Architecture, Fall 2026}}
+\author{\IEEEauthorblockN{Ozlem Polat, Thomas Martin, and Keith Kamer}\IEEEauthorblockA{University of Florida}}
+\setcounter{dbltopnumber}{3}
+\renewcommand{\dbltopfraction}{.95}
+\renewcommand{\dblfloatpagefraction}{.8}
+\renewcommand{\textfraction}{.05}
 \begin{document}
 \maketitle
 \begin{abstract}
-We evaluate a parameterized output-stationary VHDL matrix multiplier across three processing-element grids, two matrix orders, and three modeled operand-supply budgets. All 18 configurations pass eight full-width correctness cases, independently rerun using GHDL after the original Questa evaluation. For order-16 products at full supply, the 2-by-2, 4-by-4, and 8-by-8 arrays require 1216, 368, and 124 compute clocks. The largest array achieves 9.806 times the baseline speedup using 16 times as many processing elements. Limiting that array to four combined input words per clock introduces 180 stalls and raises latency to 304 clocks. A cycle decomposition identifies budget stalls, fill/drain, and per-tile capture costs. All three post-route FPGA implementations meet the constrained internal 10 ns target using 4, 16, and 64 DSPs. Useful throughput per DSP decreases as the grid grows, exposing a latency-versus-resource-efficiency tradeoff.
+We evaluate an output-stationary VHDL matrix multiplier across three processing-element grids, two matrix orders, and three modeled operand-supply budgets. The study contains \SimulationCases{} passing numerical cases over \SimulationConfigurations{} configurations and \HardwareConfigurations{} post-route FPGA implementations for order-16 matrices. At full input supply, order-16 products require \ComputeLargeTwo{}, \ComputeLargeFour{}, and \ComputeLargeEight{} compute clocks on the three grids. The largest grid achieves a \WideSpeedup{}-fold compute speedup over the 2-by-2 grid with sixteen times the processing elements. Restricting its input budget to four words introduces \LimitedStalls{} stalls and raises compute latency to \LimitedCompute{} clocks. Useful utilization is \WideUtilization{}\% at full supply, reflecting finite-workload fill/drain and capture costs. Serial readout reduces the largest grid's complete-product speedup to \LargeEndSpeedup{}. All three FPGA implementations meet the constrained internal 10 ns target. The largest grid minimizes latency, while the smallest provides the highest useful throughput per DSP. These results quantify distinct limits from operand supply, finite-workload scheduling, and result delivery.
 \end{abstract}
 \begin{IEEEkeywords}
-systolic array, matrix multiplication, input bandwidth, FPGA, architectural evaluation
+systolic array, matrix multiplication, input bandwidth, FPGA, architectural evaluation, reproducibility
 \end{IEEEkeywords}
 
-\section{Research Question and Scope}
-More arithmetic resources do not guarantee proportional performance improvement if operand delivery or finite-workload overhead prevents useful utilization. We ask how grid dimension and a controlled input-supply budget affect the latency, useful throughput, utilization, and FPGA implementation cost of one complete matrix multiplier.
+\section{Introduction}
+Systolic matrix accelerators distribute multiply-and-accumulate (MAC) work across a regular grid. Increasing the grid dimension raises peak arithmetic capacity, but useful performance also depends on operand delivery, finite-workload scheduling, and result handling. A comparison based only on PE count can therefore miss the main costs of a complete implementation.
 
-We compare square processing-element (PE) grids of dimension $P\in\{2,4,8\}$, square matrix orders $N\in\{8,16\}$, and combined input budgets $B\in\{4,8,16\}$ words per clock. All configurations compute the same complete product for a given workload. The input budget is a modeled RTL interface limit; the study does not measure physical KV260 memory bandwidth. There is no processor interface, external DRAM controller, alternate dataflow, CPU baseline, power measurement, or required board demonstration.
+This study asks how array size and a controlled input budget affect a complete matrix product. We use one output-stationary VHDL design with square PE grids $P\in\{2,4,8\}$, matrix orders $N\in\{8,16\}$, and combined boundary-input budgets $B\in\{4,8,16\}$ words per clock. Each configuration performs the same dense product for its matrix order. The 2-by-2 grid supplies the architectural reference.
 
-The baseline is the 2-by-2 grid. We hypothesize that input limitations reduce larger-grid scaling efficiency and that short products retain significant fill/drain overhead even at full supply. The experiments need not show a complete scaling plateau to answer these questions.
+The experiments test two hypotheses. First, constrained input supply reduces the scaling efficiency of larger arrays. Second, short products retain substantial fill/drain overhead even at full supply. A further implementation question is whether reduced latency justifies additional FPGA resources. We measure serial readout separately so compute speedup is not confused with complete-product speedup.
 
-\section{Implemented Architecture}
-Each PE receives a signed 16-bit $A$ operand from the left and a signed 16-bit $B$ operand from above. Registered links forward operands and associated valid bits. When both operands are valid on an enabled edge, the PE accumulates their signed product into a local 36-bit result:
+The contribution is a controlled RTL study with complete-product verification, a cycle-accounting model checked against observed events, and measured FPGA implementation evidence. The input budget models the RTL boundary interface. It does not measure KV260 DRAM bandwidth or system-level accelerator performance.
+
+\section{Related Work}
+The TPU study establishes a large matrix-multiply array as a practical inference substrate and shows the importance of data delivery to utilization~\cite{tpu}. SCALE-Sim exposes array shape, dataflow, and bandwidth parameters for cycle-level accelerator exploration~\cite{scale}. These studies motivate varying arithmetic capacity and operand supply together.
+
+Gemmini evaluates accelerator configurations within a complete hardware/software stack~\cite{gemmini}. Its scope includes effects that our isolated RTL experiment omits, including processor integration and software overhead. Scale-out Systolic Arrays studies array granularity, interconnect, and tiling across multiple pods~\cite{sosa}. Our experiment holds the dataflow and PE design fixed and varies only a small square grid, complete matrix workload, and modeled input supply.
+
+Palacios et al. co-design systolic arrays with structured pruning for edge transformers, examining performance, hardware cost, and application accuracy~\cite{sasp}. Their results motivate examining costs alongside speedup. Their pruning-dependent scaling mechanism differs from our dense workload's input-supply, wavefront, capture, and readout costs; their ASIC area and energy values are not directly comparable with our FPGA resource counts.
+
+Consequently, the findings are specific to this controller, capture schedule, arithmetic width, and input interface. They provide an inspectable explanation of measured scaling rather than a new dataflow or a universal optimum array size.
+
+\section{Architecture}
+\subsection{Dataflow and arithmetic}
+Every PE receives a signed 16-bit $A$ operand from the left and a signed 16-bit matrix-$B$ operand from above. Registered links forward values and valid bits. When both operands are valid on an enabled edge, the PE accumulates their product locally:
 \begin{equation}
- C[i,j]=\sum_{k=0}^{N-1} A[i,k]B[k,j].
+C[i,j]=\sum_{k=0}^{N-1}A[i,k]B[k,j].
 \end{equation}
-The width preserves the exact 16-term sum, including repeated products of $-32768$ with itself. The output remains stationary while operands move through the array.
+The accumulator is signed 36-bit for every configuration. This preserves the exact 16-term signed-extreme sum and holds arithmetic precision constant across workloads. The standalone budget symbol $B$ is distinct from an entry of matrix $B[k,j]$.
 
-Tile indices $(u,v)$ identify a global matrix origin $(r_0,c_0)=(uP,vP)$. The controller injects $A[r_0+r,k]$ on enabled boundary step $k+r$ and $B[k,c_0+c]$ on step $k+c$. They meet at PE $(r,c)$ on enabled step $k+r+c$. Logical steps advance only when staging completes; all grid state holds during a budget stall, preserving alignment. Matrix entries $B[k,j]$ are distinct from the standalone input-budget parameter $B$.
-
-When $N>P$, the controller visits $(N/P)^2$ output tiles in row-major order. Every tile streams the full inner dimension $N$. A capture clock stores its $P^2$ results and clears the grid. The complete result is subsequently read serially in $N^2$ clocks. The readout interface has no backpressure and assumes every valid word is consumed.
-
-The input stager accepts at most $B$ new boundary words per clock, retaining accepted values while a step is incomplete. It bypasses unstored values on the completing clock, avoiding an artificial staging clock at full supply. Empty drain steps advance normally. Optional counters and debug outputs are disabled by the synthesis generic \texttt{INSTR=false}; an RTL regression checks agreement with the instrumented datapath.
-
-\section{Methodology and Validation}
-The Cartesian product gives 18 architectural configurations. Each is evaluated using zero, identity, two signed-extreme, mixed-sign, and three fixed-seed random cases. An independent Python matrix multiplication produces exact reference results. The vector manifest records the seed, case order, and canonical LF-byte SHA-256 hashes.
-
-The original QuestaSim 2026.2 sweep records 144 passing cases. The follow-up GHDL sweep independently verifies the same cases, comparing every output at full 36-bit width, requiring exactly $N^2$ ordered result words and $N^3$ useful MACs. Counter formulas are supplemented by independent interface-clock observations. Directed tests cover reset/clear priority, stall hold, valid forwarding, partially staged words, sparse/empty steps, and the synthesis instrumentation setting. CI repeats these checks for future pull requests and retains logs and measurements.
-
-Compute latency begins with the first accepted input and ends at the final tile capture. It includes staging, budget stalls, fill/drain, and tile transitions. Total latency adds serial readout. Useful throughput and utilization are
-\begin{align}
- T_{\mathrm{MAC}} &= N^3/C_{\mathrm{compute}},\\
- U_{\mathrm{PE}} &= N^3/(P^2 C_{\mathrm{compute}}).
-\end{align}
-Speedup divides the 2-by-2 latency by candidate latency for identical $N$, $B$, and inputs. Scaling efficiency divides speedup by $P^2/4$.
-
-Vivado 2025.2.1 performs out-of-context synthesis, optimization, placement, and routing for part \texttt{xck26-sfvc784-2LV-c}, using a common 10 ns clock constraint, one thread, default directives, and \texttt{INSTR=false}. Completed reports cover $P=2,4,8$ at $N=16$. The runtime budget setting allows the three budget values to share each grid implementation. Thomas Martin produced all three FPGA measurements; original logs and reports are retained. These runs precede the analysis follow-up. Its only RTL change masks the PE activity signal during reset/clear; that signal is unused with instrumentation disabled. The synthesized datapath, controller, stager, and clock constraint are unchanged.
-
-\section{Cycle Accounting}
-Let $Q=(N/P)^2$ denote output tiles. Each tile advances for $N+2P-2$ enabled steps and uses one capture clock. Boundary step $t$ requires
-\begin{equation}
-w(t)=2\sum_{i=0}^{P-1}\mathbf{1}_{0\leq t-i<N}
-\end{equation}
-new words, where the indicator is one if its condition holds and zero otherwise. The budget stall count is
-\begin{equation}
- S=Q\sum_{t=0}^{N+2P-3}\max\left(0,\left\lceil w(t)/B\right\rceil-1\right).
-\end{equation}
-The implemented latency is
-\begin{align}
- C_{\mathrm{compute}} &= QN+Q(2P-2)+Q+S,\\
- C_{\mathrm{total}} &= C_{\mathrm{compute}}+N^2.
-\end{align}
-$QN=N^3/P^2$ is useful-equivalent work normalized by peak PE capacity. This decomposition does not imply that useful MACs occur in a separate interval: useful work overlaps fill/drain. The independent model validates actual measured counters; it does not substitute predicted results for missing runs.
+Tile indices $(u,v)$ select global origins $(r_0,c_0)=(uP,vP)$. Operand $A[r_0+r,k]$ enters row $r$ on enabled boundary step $k+r$, while $B[k,c_0+c]$ enters column $c$ on step $k+c$. The matching pair meets at PE $(r,c)$ on enabled step $k+r+c$. Useful work remains stationary in the accumulator while operands propagate right and down.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{latency.png}
-\caption{Measured compute latency across grid dimensions, workloads, and modeled input budgets. All products are complete and numerically verified.}
-\label{fig:latency}
+\begin{tikzpicture}[font=\small,box/.style={draw,rounded corners=1pt,align=center,minimum height=11mm,text width=25mm},>=Latex]
+\node[box] (driver) at (0,0) {External operand\\driver};
+\node[box] (stage) at (3.2,0) {Boundary input\\stager};
+\node[box] (grid) at (6.4,0) {$P\times P$ PE grid\\local accumulators};
+\node[box] (store) at (9.6,0) {$N\times N$ result\\register store};
+\node[box] (read) at (12.8,0) {Serial result\\readout};
+\node[box,text width=33mm] (ctrl) at (6.4,-1.9) {Tile and step controller};
+\draw[->] (driver)--(stage);
+\draw[->] (stage)--(grid);
+\draw[->] (grid)--(store);
+\node[font=\scriptsize] at (1.6,.85) {A/B words};
+\node[font=\scriptsize] at (4.8,.85) {Aligned values};
+\node[font=\scriptsize] at (8,.85) {$P^2$ results};
+\draw[->] (store)--(read);
+\draw[->] (ctrl.north)--node[right,font=\scriptsize]{enable / clear}(grid.south);
+\draw[->] (stage.south)|-node[left,pos=.3,font=\scriptsize]{Step ready}(ctrl.west);
+\draw[->] (ctrl.east)-|node[below,pos=.35,font=\scriptsize]{Capture}(store.south);
+\draw[->] (ctrl.south)--(6.4,-2.8)--node[below,font=\scriptsize]{Tile / boundary requests}(0,-2.8)--(driver.south);
+\end{tikzpicture}
+\caption{Implemented data path and control. The operand driver belongs to the experimental environment. The result store and serial readout belong to the RTL. A complete boundary step enables the entire grid, preserving operand alignment across stalls.}
+\label{fig:arch}
 \end{figure*}
 
-\section{Measured Results and Interpretation}
-At $N=16,B=16$, compute cycles are 1216, 368, and 124 for $P=2,4,8$. Speedups are 3.304 and 9.806 for the two larger grids, compared with ideal PE-count increases of four and sixteen. The largest grid therefore achieves 61.3\% scaling efficiency and 51.6\% useful utilization at full supply.
+\subsection{Input staging and tiling}
+The stager accepts at most $B$ new boundary words per physical clock. A partially accepted step retains its values while the grid holds. On the completing clock it bypasses unstored values directly, avoiding an extra staging clock when supply is sufficient. Empty drain steps advance without demanding operands. This implements a combined A/B-word budget rather than separate independent channel budgets.
 
-For $N=16,P=8$, reducing $B$ from sixteen to eight introduces 60 stalls and raises latency from 124 to 184 clocks. Reducing it to four introduces 180 stalls and raises latency to 304 clocks, a 2.452-fold latency increase. These measurements directly isolate the modeled supply penalty because the enabled-step and capture counts remain constant.
+There are $Q=(N/P)^2$ output tiles. Each tile streams the full inner dimension $N$, advances for $N+2P-2$ enabled steps, and uses one capture clock. Capture writes $P^2$ results and clears the grid. The controller then advances through output tiles in row-major order. After the final tile it serializes the complete result in $N^2$ clocks. The readout has no backpressure and assumes every valid word is consumed.
 
-At full supply, the same product uses 64 useful-equivalent clocks, 56 fill/drain clocks, and four capture clocks. Thus finite-workload scheduling limits utilization even when no input stalls occur. The smaller $N=8,P=8,B=16$ product takes 23 compute clocks and 64 readout clocks, demonstrating why compute and end-to-end speedup must be reported separately.
+The selected mapping uses registers for the result store. Its capacity is $36N^2$ bits. A matrix order therefore changes more than the number of tiles: it changes result storage, addressing, capture selection, and readout logic. Figure~\ref{fig:arch} separates these components from the arithmetic array.
 
-\begin{table}[t]
-\centering
-\caption{All 18 simulation configurations. $N$ is matrix order; $P$ is PE-grid dimension.}
-\begin{tabular}{rrrrrrr}
-\toprule
-$N$ & $P$ & $B$ & Cycles & Stalls & MAC/cyc & U (\%)\\
-\midrule
-8 & 2 & 4 & 176 & 0 & 2.909 & 72.7\\
-8 & 2 & 8 & 176 & 0 & 2.909 & 72.7\\
-8 & 2 & 16 & 176 & 0 & 2.909 & 72.7\\
-8 & 4 & 4 & 88 & 28 & 5.818 & 36.4\\
-8 & 4 & 8 & 60 & 0 & 8.533 & 53.3\\
-8 & 4 & 16 & 60 & 0 & 8.533 & 53.3\\
-8 & 8 & 4 & 44 & 21 & 11.636 & 18.2\\
-8 & 8 & 8 & 30 & 7 & 17.067 & 26.7\\
-8 & 8 & 16 & 23 & 0 & 22.261 & 34.8\\
-\midrule
-16 & 2 & 4 & 1216 & 0 & 3.368 & 84.2\\
-16 & 2 & 8 & 1216 & 0 & 3.368 & 84.2\\
-16 & 2 & 16 & 1216 & 0 & 3.368 & 84.2\\
-16 & 4 & 4 & 608 & 240 & 6.737 & 42.1\\
-16 & 4 & 8 & 368 & 0 & 11.130 & 69.6\\
-16 & 4 & 16 & 368 & 0 & 11.130 & 69.6\\
-16 & 8 & 4 & 304 & 180 & 13.474 & 21.1\\
-16 & 8 & 8 & 184 & 60 & 22.261 & 34.8\\
-16 & 8 & 16 & 124 & 0 & 33.032 & 51.6\\
-\bottomrule
-\end{tabular}
-\end{table}
+\section{Experimental Method}
+\subsection{Workloads and correctness}
+The Cartesian product contains \SimulationConfigurations{} simulation configurations. Each runs eight cases: zero, identity, two signed-extreme cases, mixed signs, and three fixed-seed random cases. A Python reference computes exact full-width matrix products. Canonical vector files and SHA-256 manifests identify the input bytes.
 
-A larger array still improves compute latency in every tested configuration. At $B=4$, the 8-by-8 takes half the clocks of the 4-by-4 for both matrix orders. We therefore conclude that limited input supply reduces scaling efficiency; this sweep does not establish a point beyond which grid growth ceases to help.
+The QuestaSim 2026.2 sweep passes all \SimulationCases{} cases. The committed independent GHDL 5.0.1 sweep also passes all cases and reproduces the simulation-summary counters~\cite{ghdl}. Every result word is checked at full width, together with readout order, exact $N^3$ useful MACs, and independent interface-clock observations. The analysis checks each configuration against the cycle model rather than validating only a single representative row.
 
-\section{FPGA Evidence and Limitations}
-Table~\ref{tab:fpga} reports all three routed implementations. DSP use follows PE count: 4, 16, and 64. All meet the internal 10 ns target, with positive worst setup and hold slack and no unconstrained internal endpoints reported. The $16\times16\times36$-bit result store maps to registers, accounting for 9216 storage bits; all three use zero BRAM.
-
-\begin{table}[t]
-\centering
-\caption{Measured post-route FPGA results at $N=16$ and a common 10 ns internal target.}
-\label{tab:fpga}
-\begin{tabular}{rrrrrl}
-\toprule
-$P$ & LUTs & FFs & DSPs & BRAM & WNS (ns)\\
-\midrule
-2 & 7260 & 9437 & 4 & 0 & +3.955\\
-4 & 11488 & 9505 & 16 & 0 & +3.786\\
-8 & 8166 & 10211 & 64 & 0 & +2.176\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-LUT use is not monotonic in PE count: the 4-by-4 uses 11488 LUTs, while the 8-by-8 uses 8166. This is a measured implementation outcome; resource mapping and control/storage logic need not scale in proportion to the number of PEs. Determining the precise cause would require a separate netlist-level investigation.
-
-At $N=16,B=16$, useful throughput is 3.368, 11.130, and 33.032 MACs per compute clock. Dividing by measured DSP use gives 0.842, 0.696, and 0.516 MACs per clock per DSP. At $B=4$, the ratios are 0.842, 0.421, and 0.211. Thus the largest grid is fastest in every tested case, while the smallest delivers the highest useful throughput per DSP for these finite workloads. Figure~\ref{fig:dsp} pairs simulated throughput with actual implementation cost; it excludes serial readout and external transfers.
+Directed regressions cover PE reset/clear priority, valid forwarding, global holds, partial input staging, and agreement between instrumented and synthesis-mode outputs. This synthesis-mode comparison is a directed simulation regression. Activity traces record all configurations and validate contiguous clocks, zero MAC events during stalls, $N$ useful MACs per PE before each tile capture, and complete tile counts. Figure~\ref{fig:verify} summarizes the verification and reporting workflow.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{throughput_vs_dsp.png}
-\caption{Useful throughput for $N=16$ against post-route DSP count, across all three input budgets.}
+\begin{tikzpicture}[font=\scriptsize,>=Latex,node distance=6mm,box/.style={draw,align=center,text width=25mm,minimum height=10mm}]
+\node[box] (source) {RTL, fixed vectors,\\configuration table};
+\node[box,below left=8mm and 1mm of source] (sim) {RTL simulation\\and Python reference};
+\node[box,below right=8mm and 1mm of source] (fpga) {Vivado synthesis\\placement / routing};
+\node[box,below=8mm of sim] (trace) {CSV, event traces,\\component logs};
+\node[box,below=8mm of fpga] (reports) {Resources, timing,\\diagnostics, checkpoint};
+\node[box,below right=8mm and 1mm of trace] (validate) {Source and coverage checks\\cycle / timing validation};
+\node[box,below=of validate] (analysis) {Metrics, plots, replay,\\paper tables and numbers};
+\draw[->](source)--(sim);\draw[->](source)--(fpga);
+\draw[->](sim)--(trace);\draw[->](fpga)--(reports);
+\draw[->](trace)--(validate);\draw[->](reports)--(validate);
+\draw[->](validate)--(analysis);
+\end{tikzpicture}
+\caption{Verification and reporting workflow. Completed measurements pass the validation gate before becoming the selected analysis dataset.}
+\label{fig:verify}
+\end{figure}
+
+\subsection{FPGA comparison}
+The hardware comparison uses the saved Vivado 2025.2.1 synthesis and routed reports for $N=16$, $P\in\{2,4,8\}$, targeting \texttt{xck26-sfvc784-2LV-c}. All three builds use a 10 ns clock, out-of-context synthesis, optimization, placement, routing, one tool thread, default directives, and \texttt{INSTR=false}. The runtime input budget does not require a separate synthesis build. Each hardware result therefore pairs with the three input-budget simulations for the same grid and matrix order.
+
+Resource counts are read from the implementation reports~\cite{amd}. Setup and hold slack and unconstrained-internal-endpoint counts are checked alongside the numerical summaries. External input/output delays are unspecified in this OOC flow. The reported timing qualifies constrained internal paths; board interface timing and physical DRAM performance are outside the measurement boundary.
+
+\section{Cycle Model and Metrics}
+Boundary step $t$ needs
+\begin{equation}
+w(t)=2\sum_{i=0}^{P-1}\mathbf{1}_{0\leq t-i<N}
+\end{equation}
+new words. The total budget-induced stall count is
+\begin{equation}
+S=Q\sum_{t=0}^{N+2P-3}\max\left(0,\left\lceil\frac{w(t)}{B}\right\rceil-1\right).
+\end{equation}
+The measured schedule follows
+\begin{align}
+C_c &= QN+Q(2P-2)+Q+S,\\
+C_t &= C_c+N^2.
+\end{align}
+Here $C_c$ is compute latency and $C_t$ includes serial readout. The terms denote useful-equivalent work, fill/drain overhead, capture, and budget stalls. Since $QN=N^3/P^2$, useful-equivalent work normalizes the required MAC count by peak PE capacity. It is an accounting term; useful MACs overlap the physical fill/drain interval.
+
+Useful throughput and PE utilization are
+\begin{align}
+T_{\rm MAC}&=N^3/C_c, & U&=N^3/(P^2 C_c).
+\end{align}
+For a fixed matrix size and budget, $S_c=C_c(P=2)/C_c(P)$, $S_t=C_t(P=2)/C_t(P)$, and scaling efficiency $\eta=S_c/(P^2/4)$. The definitions separate compute scaling from complete-result delivery.
+
+At $f=100$ MHz, an implementation meeting internal setup and hold timing has the conditional compute rate $fN^3/C_c$. Dividing by $10^9$ gives GMAC/s. Replacing $C_c$ with $C_t$ includes readout. One MAC counts as a multiplication plus an addition, so GOP/s is twice GMAC/s. These are rates calculated from measured cycles and a timing-qualified target, not measured board rates.
+
+\begin{table*}[t]
+\centering\small
+\caption{All eighteen simulation configurations. $C_c$ is compute latency, $C_t$ includes serial readout, and $S$ counts budget stalls. $S_c$/$S_t$ are speedups over the matching 2-by-2 grid; $\eta$ is PE-count scaling efficiency.}
+\input{\AnalysisPath/simulation_table.tex}
+\label{tab:sim}
+\end{table*}
+
+\section{Measured Scaling}
+\subsection{Matrix size and input supply}
+Table~\ref{tab:sim} presents every configuration. Figure~\ref{fig:combined} exposes the substantial absolute difference between complete order-8 and order-16 products. A similar curve shape does not mean equal clock counts. Additional matrix-specific latency panels are available with the generated analysis.
+
+For $N=16,B=16$, compute latency falls from \ComputeLargeTwo{} to \ComputeLargeFour{} and \ComputeLargeEight{} clocks. The largest grid achieves \WideSpeedup{} times the compute speedup, compared with sixteen times the PE count. Its \WideEfficiency{}\% scaling efficiency quantifies the gap from ideal scaling.
+
+For $N=16,P=8$, reducing $B$ from sixteen to four increases compute latency from \WideCompute{} to \LimitedCompute{} clocks, with \LimitedStalls{} budget stalls and a \LimitedPenalty{}-fold latency penalty. Enabled-step and capture counts remain fixed, isolating the modeled input-supply cost. A larger grid remains faster throughout the measured sweep, including the smallest budget. The results show reduced proportional benefit rather than a demonstrated scaling plateau.
+
+\begin{figure*}[t]
+\centering\includegraphics[width=.85\textwidth]{latency_combined.png}
+\caption{Both matrix sizes on a shared clock axis. Solid lines denote order-16 products and dashed lines order-8 products. The axis includes the largest observed latency.}
+\label{fig:combined}
+\end{figure*}
+
+\subsection{Utilization and finite-workload overhead}
+Figure~\ref{fig:util} plots utilization rather than leaving it implicit in the tables. At $N=16,P=8,B=16$, useful utilization is \WideUtilization{}\%. The product uses \WideUseful{} useful-equivalent clocks, \WideFillDrain{} fill/drain clocks, and \WideCapture{} capture clocks. These structural terms explain idle capacity even without budget stalls.
+
+At $N=8,P=8$, a single output tile still incurs the wavefront fill and drain cost. Increasing supply cannot remove that cost. Figure~\ref{fig:cycles} distinguishes structural overhead from the additional waits caused by the budget. Scaling efficiency and utilization answer different questions: efficiency normalizes speedup against the 2-by-2 reference, while utilization normalizes useful work against the candidate's own capacity.
+
+\begin{figure*}[t]
+\centering\includegraphics[width=.95\textwidth]{utilization.png}
+\caption{Useful PE utilization across all grids, matrix workloads, and input budgets. Both panels use a common percentage scale.}
+\label{fig:util}
+\end{figure*}
+\begin{figure*}[t]
+\centering\includegraphics[width=.95\textwidth]{cycle_breakdown.png}
+\caption{Capacity-normalized compute-cycle decomposition. Useful MACs overlap fill/drain in physical time; the stacked terms account for total capacity cost.}
+\label{fig:cycles}
+\end{figure*}
+
+\subsection{Serial readout and timed throughput}
+The order-8 wide-grid product requires \SmallWideCompute{} compute clocks but \SmallWideTotal{} total clocks. Serializing its \ReadoutSmall{} outputs limits end-to-end speedup to \SmallEndSpeedup{} times the 2-by-2 grid. For order-16 full-supply products, the largest grid's compute speedup is \WideSpeedup{}, but end-to-end speedup is \LargeEndSpeedup{} after \ReadoutLarge{} readout clocks.
+
+Table~\ref{tab:sim} reports compute and end-to-end speedup and scaling efficiency for all eighteen configurations. Table~\ref{tab:eff} gives timing-qualified GMAC/s for the nine order-16 grid/budget pairs. Those rates pair each simulated workload with its measured FPGA implementation and exclude external transfers, software overhead, and intervals between products.
+
+Figure~\ref{fig:speedup} directly compares compute and readout-inclusive scaling with PE-count scaling. Every speedup uses the matching 2-by-2 RTL workload and input budget as its denominator. No CPU measurement is available, so these curves do not imply CPU-relative acceleration. The widening gap after serial readout shows the cost of a result interface that does not scale with the grid.
+
+\begin{figure*}[t]
+\centering\includegraphics[width=.86\textwidth]{speedup.png}
+\caption{Speedup relative to the 2-by-2 RTL grid at the same matrix size and input budget. Dashed gray lines show PE-count scaling, not a predicted measured result. Right-hand panels include the serial readout.}
+\label{fig:speedup}
+\end{figure*}
+
+\begin{table}[t]
+\setlength{\tabcolsep}{4.5pt}
+\centering\small
+\caption{Order-16 compute/end-to-end speedup, scaling efficiency, and conditional throughput at 100 MHz. One MAC represents two arithmetic operations. Subscripts $c$ and $t$ distinguish compute-only and readout-inclusive rates.}
+\input{\AnalysisPath/efficiency_table.tex}
+\label{tab:eff}
+\end{table}
+
+\section{FPGA Implementation Results}
+Table~\ref{tab:fpga} places the three grid sizes side by side. Its simulation rows cover both matrix orders; hardware resources and clock-based rates refer to the order-16 builds. Figure~\ref{fig:resources} presents the implementation resources separately.
+
+The 2-by-2, 4-by-4, and 8-by-8 implementations use \LUTLargeTwo{}, \LUTLargeFour{}, and \LUTLargeEight{} LUTs; \FFLargeTwo{}, \FFLargeFour{}, and \FFLargeEight{} flip-flops; and \DSPLargeTwo{}, \DSPLargeFour{}, and \DSPLargeEight{} DSPs. All use zero BRAM tiles. DSP count follows PE count. LUT count peaks at the 4-by-4 grid, so the grid with the most arithmetic capacity does not consume the most LUT resources in these implementations. Resource selection therefore requires the measured LUT, FF, and DSP costs together.
+
+The complete order-16 result store contains $36N^2=9216$ bits and maps to registers in these builds. It is present alongside the PE grid, staging logic, tile controller, capture selection, and serial readout. Consequently, FPGA cost describes the complete accelerator module rather than an isolated collection of MAC units.
+
+\begin{table}[t]
+\setlength{\tabcolsep}{4.5pt}
+\centering\small
+\caption{Grid-to-grid comparison at full supply ($B=16$). Simulation metrics cover both matrix sizes. Hardware costs and 100 MHz rates describe the three order-16 implementations; all use zero BRAM.}
+\input{\AnalysisPath/comparison_table.tex}
+\label{tab:fpga}
+\end{table}
+\begin{figure}[t]
+\centering\includegraphics[width=\columnwidth]{fpga_resources.png}
+\caption{Post-route resources for the three order-16 implementations at the same 10 ns target. DSP and LUT costs have different scaling patterns.}
+\label{fig:resources}
+\end{figure}
+
+All three implementations meet the constrained internal setup and hold requirements. Setup slack is \WNSLargeTwo{}, \WNSLargeFour{}, and \WNSLargeEight{} ns. The saved reports contain no unconstrained internal endpoints. The external I/O-delay counts are 71/63, 135/67, and 263/74 input/output ports, respectively; their timing is outside this OOC comparison.
+
+Figure~\ref{fig:dsp} pairs order-16 throughput with the corresponding implemented DSP count. At full supply the three grids provide \DSPRateLargeTwo{}, \DSPRateLargeFour{}, and \DSPRateLargeEight{} useful MACs per clock per DSP. The largest array gives the shortest compute latency; the smallest provides the highest useful throughput per DSP across all three input budgets. This is a latency-versus-arithmetic-resource trade-off, while the separate LUT and FF measurements capture the remaining implementation costs.
+
+\begin{figure}[t]
+\centering\includegraphics[width=\columnwidth]{throughput_vs_dsp.png}
+\caption{Order-16 useful compute throughput versus measured DSP use, with one curve per runtime input budget.}
 \label{fig:dsp}
 \end{figure}
 
-The OOC reports list 71/63, 135/67, and 263/74 input/output ports without delay constraints for $P=2,4,8$. The WNS result therefore applies to constrained internal paths. Board I/O timing requires an external timing contract. The common 100 MHz target is supported by internal timing; measured board throughput, power, and memory behavior are outside this experiment.
+\section{Recorded Activity and Reproducibility}
+Figures~\ref{fig:activity8} and~\ref{fig:activity16} show every grid/budget configuration for the two complete workloads. Rows correspond to grid dimensions and columns to budgets. The recorded useful-MAC density exposes the propagating activity front, budget-induced holds, and tile transitions. Increasing supply shortens physical execution without changing the required work.
+
+The offline topology replay shows individual MAC events. Work surfaces track completed work per PE. First/last-MAC surfaces and space--time slices show how the valid window moves through the grid and stretches during holds. These views explain the mechanism behind the scalar metrics. Their interpolated surfaces visualize discrete samples; they do not introduce additional measurements.
+
+The configuration table drives the measurement axes. New experiments receive unique timestamped output directories automatically. The published analysis reads the committed simulation summaries and original FPGA reports. Validation checks case coverage, source records for the independent simulation, trace consistency, report values, and timing scope before generating CSVs, plots, and manuscript values. Tables and numerical macros come from the same analysis rather than manually duplicated measurements. New measurements remain in their own directories.
+
+\section{Limitations and Extensions}
+The experiment covers small dense products and one output-stationary schedule. It does not implement structured pruning, zero skipping, alternate precisions, alternate dataflows, CPU integration, or a physical memory system. Zero-valued numerical cases still exercise the complete dense-MAC schedule. Resource counts do not establish energy or power savings.
+
+The current result store uses many parallel tile writes and serial readout. A banked or BRAM-oriented redesign could change LUT cost, FF cost, and capture latency. Overlapping input stages or output readout could also change complete-product performance. Such changes require new RTL, comparable verification, and a new cycle model where appropriate. They are extensions rather than measurements inferred from the current design.
 
 \section{Conclusion}
-The verified RTL and FPGA study demonstrates two sources of sublinear scaling: budget-induced grid holds and finite-workload fill/drain/capture overhead. More PEs improve every measured compute-latency case, while improving supply from four to sixteen words substantially benefits the 8-by-8. All three grid implementations meet the same constrained internal timing target. The 8-by-8 delivers the shortest compute latency; the 2-by-2 delivers the highest useful throughput per DSP. The appropriate grid therefore depends on whether absolute latency or efficiency per arithmetic resource is the priority. No board bandwidth, power, or energy claim follows from these measurements.
+Increasing the PE grid reduces compute latency in every tested configuration, but operand-supply stalls and finite-workload overhead keep speedup below PE-count scaling. Serial readout further reduces the complete-product gain. At full supply and order sixteen, the largest grid achieves \WideSpeedup{}-fold compute speedup and \LargeEndSpeedup{}-fold end-to-end speedup over the 2-by-2 reference. All three hardware builds meet the constrained internal 100 MHz target. The largest grid minimizes clocks, while the smallest maximizes useful throughput per DSP. The combined cycle, utilization, resource, and timing measurements quantify the implementation trade-off for this accelerator and interface.
 
+\begin{samepage}
 \section*{Reproducibility}
-Source, fixed vectors, scripts, CI configuration, measured CSVs, and analysis figures are maintained at \url{https://github.com/OzPol/systolic-array-scaling}. The repository includes the fixed input vectors, simulation commands, cycle analysis, and per-clock activity replay.
+The repository contains source, fixed vectors, the simulation and FPGA evidence, validated metrics, generated plots, editable report/presentation sources, and an offline activity replay: \url{https://github.com/OzPol/systolic-array-scaling}. The command \texttt{make analysis} generates a new analysis directory from the saved measurements. Analysis requires Python and the pinned plotting environment; rerunning the FPGA implementation additionally requires the stated Vivado installation.
+\end{samepage}
+
+\newpage
+\begin{thebibliography}{8}
+\bibitem{tpu} N. P. Jouppi et al., ``In-Datacenter Performance Analysis of a Tensor Processing Unit,'' in \emph{ISCA}, 2017, doi: 10.1145/3079856.3080246.
+\bibitem{scale} A. Samajdar, Y. Zhu, P. Whatmough, M. Mattina, and T. Krishna, ``SCALE-Sim: Systolic CNN Accelerator Simulator,'' arXiv:1811.02883, 2018.
+\bibitem{gemmini} H. Genc et al., ``Gemmini: Enabling Systematic Deep-Learning Architecture Evaluation via Full-Stack Integration,'' arXiv:1911.09925, 2019.
+\bibitem{sosa} A. C. Yuzuguler et al., ``Scale-out Systolic Arrays,'' arXiv:2203.11540, 2022.
+\bibitem{sasp} P. Palacios, R. Medina, J.-L. Rouas, G. Ansaloni, and D. Atienza, ``Systolic Arrays and Structured Pruning Co-design for Efficient Transformers in Edge Systems,'' in \emph{GLSVLSI}, 2025, doi: 10.1145/3716368.3735158.
+\bibitem{amd} AMD, \emph{Vivado Design Suite User Guide: Design Analysis and Closure Techniques}, UG906, version 2025.2, ``Report Utilization.'' [Online]. Available: \url{https://docs.amd.com/r/2025.2-English/ug906-vivado-design-analysis/Report-Utilization}.
+\bibitem{ghdl} GHDL Project, ``Invoking GHDL.'' [Online]. Available: \url{https://ghdl.github.io/ghdl/using/InvokingGHDL.html}.
+\end{thebibliography}
+
+\clearpage
+\appendices
+\begin{figure*}[p]
+\centering
+{\large\bfseries Appendix: Recorded Activity Atlas\par}\vspace{4mm}
+\includegraphics[width=.96\textwidth,height=.75\textheight,keepaspectratio]{activity_matrix08.png}
+\caption{Recorded activity for all nine order-8 configurations. The views include complete products rather than only the first output tile.}
+\label{fig:activity8}
+\end{figure*}
+\begin{figure*}[p]
+\centering
+\includegraphics[width=.96\textwidth,height=.87\textheight,keepaspectratio]{activity_matrix16.png}
+\caption{Recorded activity for all nine order-16 configurations. Restricted supply stretches the physical execution of larger grids while preserving their MAC work.}
+\label{fig:activity16}
+\end{figure*}
 \end{document}
