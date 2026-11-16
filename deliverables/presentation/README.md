@@ -9,3 +9,5 @@ The [technical Markdown deck](../../docs/presentations/systolic-array-scaling-te
 `make publish` rebuilds the final report and analysis, then packages the reviewed PowerPoint and PDF preview under `build/documents/`. It preserves the native charts and equations. Edit the PowerPoint deliberately when changing the selected study, then refresh its PDF preview.
 
 The earlier Beamer outline and its narration remain in [archive/](archive/). The original video storyboard remains in [video/outline.md](../video/outline.md).
+
+The [TM editions and substantive review](../../docs/presentations/TM-review.md) continue the version catalog with a 31-slide reference deck and an 11-slide recording deck. The latter retains all [speaker notes](../../docs/presentations/TM-05-speaker-notes.md).

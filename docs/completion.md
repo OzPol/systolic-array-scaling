@@ -9,7 +9,7 @@ The completed simulation comparison covers eighteen grid/matrix/budget configura
 | Generated tables and plots | `results/analysis/` |
 | Recorded activity replay | `results/visualization/` |
 | Final report and editable source | `deliverables/report/final-report.pdf`, `final-report.tex` |
-| Three editable presentation editions and technical Markdown deck | `docs/presentations/` |
+| Editable presentation editions and technical Markdown deck | `docs/presentations/` |
 | Five-minute speaking outline | `deliverables/presentation/narration.md` |
 | Original video outline | `deliverables/video/outline.md` |
 
