@@ -15,6 +15,22 @@
       "file": "03-systolic-array-scaling-readable-32-slides.pptx",
       "slides": 32,
       "sha256": "1b2956b678888f1f26f41444faa25150e9837e7742e81b3d5ef99ff3ae8a6198"
+    },
+    {
+      "file": "TM-04-systolic-array-scaling-full-31-slides.pptx",
+      "slides": 31,
+      "sha256": "8f58b19ad4368e7475d6064360b6fae0bb610ed55e6f8f8f8126e1659d3defff",
+      "family": "TM",
+      "source_filename": "Systolic_Array_Premium_Group_2.pptx",
+      "slides_with_notes": 10
+    },
+    {
+      "file": "TM-05-systolic-array-scaling-math-recording-11-slides.pptx",
+      "slides": 11,
+      "sha256": "cca3d6ed271a70d7a375aa62f356a6af6a5f366e80f8f34051a5fe6afa4829f7",
+      "family": "TM",
+      "source_filename": "Systolic_Array_Premium_Group_2_Math_Video_Only.pptx",
+      "slides_with_notes": 11
     }
   ],
   "measurement_sources": {
@@ -24,5 +40,46 @@
   "technical_deck": {
     "file": "systolic-array-scaling-technical.md",
     "slides": 43
-  }
+  },
+  "recording_recommended": "TM-05-systolic-array-scaling-math-recording-11-slides.pptx",
+  "tm_review": {
+    "file": "TM-review.md",
+    "received_attachments": 3,
+    "matching_repository_copies_checked": 2,
+    "distinct_presentations": 2,
+    "duplicate_check": "All eleven recording slides render identically; ordered text and speaker notes match; neither contains transition or animation blocks."
+  },
+  "tm_sources": [
+    {
+      "source_filename": "Group2_Systolic_Array_Premium_Math_Video_Only.pptx",
+      "sha256": "b853afdba4346c2a8c35fee8e6de18da32355ecd977c89bf38a883e6c73aed9e",
+      "canonical": "TM-05-systolic-array-scaling-math-recording-11-slides.pptx",
+      "selected_binary": false
+    },
+    {
+      "source_filename": "Systolic_Array_Premium_Group_2.pptx",
+      "sha256": "8f58b19ad4368e7475d6064360b6fae0bb610ed55e6f8f8f8126e1659d3defff",
+      "canonical": "TM-04-systolic-array-scaling-full-31-slides.pptx",
+      "selected_binary": true
+    },
+    {
+      "source_filename": "Systolic_Array_Premium_Group_2_Math_Video_Only.pptx",
+      "sha256": "cca3d6ed271a70d7a375aa62f356a6af6a5f366e80f8f34051a5fe6afa4829f7",
+      "canonical": "TM-05-systolic-array-scaling-math-recording-11-slides.pptx",
+      "selected_binary": true
+    },
+    {
+      "repository_path": "docs/Group2_Systolic_Array_Premium.pptx",
+      "git_blob_sha": "dd3673cb30995c374f35d6bf00f2c1d67edb3e18",
+      "canonical": "TM-05-systolic-array-scaling-math-recording-11-slides.pptx",
+      "relationship": "byte-identical to Group2_Systolic_Array_Premium_Math_Video_Only.pptx"
+    },
+    {
+      "repository_path": "docs/Systolic_Array_Premium_Group_2.pptx",
+      "commit": "8b8d7fb4fab549548667bfde6986b1b83437f35c",
+      "git_blob_sha": "41857d9faeea5d6d055a4a5311d4a302f38f7f90",
+      "canonical": "TM-04-systolic-array-scaling-full-31-slides.pptx",
+      "relationship": "byte-identical to the received 31-slide attachment"
+    }
+  ]
 }

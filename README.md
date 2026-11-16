@@ -204,7 +204,7 @@ Download generated CSVs, provenance, logs, tables, figures, and replay files thr
 ## Project documents
 
 - IEEE report: [PDF](deliverables/report/final-report.pdf) and [editable source](deliverables/report/final-report.tex).
-- Presentations: [all three editable editions](docs/presentations/) and the [technical Markdown deck](docs/presentations/systolic-array-scaling-technical.md).
+- Presentations: [editable PowerPoint editions](docs/presentations/) and the [technical Markdown deck](docs/presentations/systolic-array-scaling-technical.md).
 - Five-minute speaking material: [narration](deliverables/presentation/narration.md), covering the first thirteen slides of the expanded editions.
 - Submitted proposal: [PDF](docs/eel5764_systolic_array_project_proposal.pdf) and [Markdown](deliverables/proposal/Proposal.md).
 - Original video storyboard: [outline](deliverables/video/outline.md).
