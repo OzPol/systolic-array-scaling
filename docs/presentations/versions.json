@@ -1,0 +1,28 @@
+{
+  "recommended": "03-systolic-array-scaling-readable-32-slides.pptx",
+  "editions": [
+    {
+      "file": "01-systolic-array-scaling-19-slides.pptx",
+      "slides": 19,
+      "sha256": "7eb2580a3440437423eccaf1b8f073f0b43d851977ecdcf8eee31afd86f2045b"
+    },
+    {
+      "file": "02-systolic-array-scaling-expanded-32-slides.pptx",
+      "slides": 32,
+      "sha256": "012ebb0c2bb9acfa162a1754a8329271b408d2d9077daa12d72178319e2e4c7a"
+    },
+    {
+      "file": "03-systolic-array-scaling-readable-32-slides.pptx",
+      "slides": 32,
+      "sha256": "1b2956b678888f1f26f41444faa25150e9837e7742e81b3d5ef99ff3ae8a6198"
+    }
+  ],
+  "measurement_sources": {
+    "simulation": "../../results/summary_sim.csv",
+    "hardware": "../../results/summary_vivado.csv"
+  },
+  "technical_deck": {
+    "file": "systolic-array-scaling-technical.md",
+    "slides": 43
+  }
+}

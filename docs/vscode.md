@@ -1,9 +1,8 @@
 # Analysis in Visual Studio Code
 
-Open the existing checkout from Ubuntu:
+From the repository root in Ubuntu, open the existing checkout:
 
 ```bash
-cd ~/workspace/eel5764/project/systolic-array-scaling
 code .
 ```
 

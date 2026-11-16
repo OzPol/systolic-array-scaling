@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile the paper and slide PDFs against the same generated analysis."""
+"""Compile the final report and package the reviewed native presentation."""
 from pathlib import Path
 import shutil
 import subprocess
@@ -13,8 +13,12 @@ def build(analysis,visualization,destination):
     if not engine and not shutil.which('pdflatex'):
         raise RuntimeError('Install Tectonic or a complete LaTeX distribution to compile the PDFs')
     destination.mkdir(parents=True,exist_ok=True)
+    deck=ROOT/'docs/presentations/03-systolic-array-scaling-readable-32-slides.pptx'
+    preview=deck.with_suffix('.pdf')
+    for asset in (deck,preview):
+        if not asset.is_file():raise FileNotFoundError(f'Reviewed presentation asset missing: {asset}')
     outputs=[]
-    for name,source in [('report',ROOT/'deliverables/report/main.tex'),('presentation',ROOT/'deliverables/presentation/slides.tex')]:
+    for name,source in [('final-report',ROOT/'deliverables/report/final-report.tex')]:
         with tempfile.TemporaryDirectory(prefix=f'.{name}-',dir=destination) as temp:
             temp=Path(temp)
             wrapper=temp/f'{name}.tex'
@@ -37,6 +41,12 @@ def build(analysis,visualization,destination):
             shutil.copy2(temp/f'{name}.log',destination/f'{name}.log')
             outputs.append(target)
             print(f'Built {target}')
+    # Preserve the native charts and Office Math in the curated presentation.
+    for source,name in [(deck,'presentation.pptx'),(preview,'presentation.pdf')]:
+        target=destination/name
+        shutil.copy2(source,target)
+        outputs.append(target)
+        print(f'Packaged {target}')
     return outputs
 
 if __name__=='__main__':

@@ -105,6 +105,6 @@ The project guidelines explicitly include **systolic-array grid scaling versus i
 
 ## Measured study
 
-The [generated analysis](../results/analysis/report.md) contains the current tables and findings for both matrix sizes, all PE grids, and all modeled input budgets. It separates computation from serial readout and pairs each workload with the matching FPGA implementation. The [report PDF](../deliverables/report/main.pdf) develops the architectural explanation.
+The [generated analysis](../results/analysis/report.md) contains the current tables and findings for both matrix sizes, all PE grids, and all modeled input budgets. It separates computation from serial readout and pairs each workload with the matching FPGA implementation. The [report PDF](../deliverables/report/final-report.pdf) develops the architectural explanation.
 
 The experiment does not measure actual KV260 DRAM bandwidth, CPU-versus-accelerator speedup, or power consumption. The mathematical definition, tile-origin convention, and physical-versus-enabled clock distinction are documented in [architecture.md](architecture.md).

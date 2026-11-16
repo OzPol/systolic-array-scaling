@@ -48,7 +48,9 @@ def refresh(run,output,with_replay=True,build_pdfs=False,plots=True):
         generators=['analysis/model.py','analysis/report.py','analysis/plots.py','analysis/writing.py',
                     'analysis/evidence.py','analysis/study.py','analysis/replay.py','analysis/trace_figures.py',
                     'scripts/experiment.py','scripts/collect_vivado.py','scripts/build_documents.py',
-                    'deliverables/report/main.tex','deliverables/presentation/slides.tex','requirements.txt']
+                    'deliverables/report/final-report.tex','docs/presentations/systolic-array-scaling-technical.md',
+                    'docs/presentations/03-systolic-array-scaling-readable-32-slides.pptx',
+                    'docs/presentations/03-systolic-array-scaling-readable-32-slides.pdf','requirements.txt']
         manifest['generator_sha256']={p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest() for p in generators}
         (stage/'analysis/manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
         (stage/'analysis/evidence_validation.json').write_text(json.dumps(verified,indent=2)+'\n')
@@ -72,8 +74,7 @@ def refresh(run,output,with_replay=True,build_pdfs=False,plots=True):
         shutil.copy2(stage/'summary_vivado.csv',output/'summary_vivado.csv')
         if with_replay:shutil.copytree(stage/'visualization',output.parent/'visualization',dirs_exist_ok=True)
         if build_pdfs:
-            shutil.copy2(stage/'documents/report.pdf',ROOT/'deliverables/report/main.pdf')
-            shutil.copy2(stage/'documents/presentation.pdf',ROOT/'deliverables/presentation/slides.pdf')
+            shutil.copy2(stage/'documents/final-report.pdf',ROOT/'deliverables/report/final-report.pdf')
             shutil.copytree(stage/'documents',ROOT/'build/documents',dirs_exist_ok=True)
     print(f'Validated study; analysis: {output}')
     return verified
@@ -101,7 +102,7 @@ def main():
     parser.add_argument('--from-run',type=Path,help='analyze a new complete measurement archive')
     parser.add_argument('--measure',action='store_true',help='measure all configured simulations and six sequential FPGA builds')
     parser.add_argument('--output',type=Path,help='otherwise allocate a unique timestamped directory')
-    parser.add_argument('--publish',action='store_true',help='refresh report, slides and generated analysis from the committed study')
+    parser.add_argument('--publish',action='store_true',help='refresh the final report and analysis, and package the reviewed native slides')
     parser.add_argument('--no-replay',action='store_true',help='skip replay figure generation in a private analysis')
     args=parser.parse_args()
     if args.measure and args.from_run:parser.error('--measure and --from-run are mutually exclusive')

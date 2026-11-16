@@ -1,9 +1,11 @@
-# Technical presentation
+# Presentations and narration
 
-[slides.pdf](slides.pdf) is a nine-slide presentation of the selected experiment. [slides.tex](slides.tex) is the editable Beamer source. Charts use the same generated measurements as the IEEE report; the summary table is editable LaTeX.
+The [presentation index](../../docs/presentations/README.md) preserves all three editable PowerPoint editions: the 19-slide edition, the expanded 32-slide edition, and the 32-slide edition with consistent black text and yellow accents. The latest edition is the recommended presentation. Charts and tables are native objects, and display equations use Office Math.
 
-The presentation covers architecture, verification, compute latency, stalls, serial readout, speedup, FPGA cost, and limitations. [narration.md](narration.md) provides a short speaking outline; use the slide figures for current numerical values.
+[narration.md](narration.md) covers the thirteen-slide main sequence in approximately five minutes. The remaining nineteen slides provide supporting analyses and detailed reference tables.
 
-Build the slides and report with `python scripts/build_documents.py`, or refresh the complete selected evidence and documents with `python scripts/experiment.py --publish` from the repository root. See [setup](../../docs/setup.md) for dependencies.
+The [technical Markdown deck](../../docs/presentations/systolic-array-scaling-technical.md) develops the dataflow, arithmetic, cycle model, verification, performance metrics, and FPGA interpretation in more detail. It works as an Obsidian note with slide separators and editable mathematical notation.
 
-The earlier `deliverables/video/outline.md` remains available unchanged.
+`make publish` rebuilds the final report and analysis, then packages the reviewed PowerPoint and PDF preview under `build/documents/`. It preserves the native charts and equations. Edit the PowerPoint deliberately when changing the selected study, then refresh its PDF preview.
+
+The earlier Beamer outline and its narration remain in [archive/](archive/). The original video storyboard remains in [video/outline.md](../video/outline.md).

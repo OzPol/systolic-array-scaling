@@ -54,6 +54,17 @@
 | OP | Ozlem Polat |
 | TM | Thomas Martin |
 
+## Technical changes
+
+| Issue | Implemented correction |
+|---|---|
+| Simulator shell output could hide a failed command | Checked Python execution, required PASS markers, and complete case coverage |
+| Platform-specific vector line endings changed file hashes | Canonical vector bytes and explicit source/vector checksums |
+| Useful-MAC activity ignored reset/clear priority | Masked the event signal and added a regression for the instrumentation contract |
+| Counter formulas alone did not independently observe elapsed clocks | Added interface-clock observations alongside counter checks |
+| An incomplete measurement set could reach the old summarizer | Strict coverage/integrity validation before analysis |
+| Separate manual run paths made it easy to omit a matrix size | Configuration-driven sweeps and unique output folders, with all six P/N builds selected by default |
+
 ## Verification and reporting
 
 The simulation summary covers eighteen configurations and eight passing cases per configuration. The independent GHDL archive provides full-width numerical verification, vector/source hashes, component logs, and the same counter results. The three N=16 FPGA builds provide synthesis/routed resources and constrained internal timing.

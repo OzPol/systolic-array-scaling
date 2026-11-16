@@ -62,3 +62,6 @@ Thumbs.db
 *.toc
 *.out
 *.synctex.gz
+
+# Publication stages are temporary, never measurement archives.
+results/.analysis-*/

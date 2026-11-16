@@ -38,11 +38,13 @@
     "analysis/study.py": "543671d1fb64f495e19bdf7480edc758b1a777763e48e31d12c786ab19f613ee",
     "analysis/replay.py": "5e4e79b3e2f224d38e2054cf1e95f47493390777c795d0fe5868493362076067",
     "analysis/trace_figures.py": "38c2ff7abae35c519cc2e812ec58a1284cc54882006645cd30c0acfaefb892e6",
-    "scripts/experiment.py": "2c97c9143ca1670086bd282dbf26923a5d683c8f9eb1d9f8c827219f4d892a6a",
+    "scripts/experiment.py": "ffe72819095e25a8ee9df5c6ed860a1ae8d1ab891a15e5360ee460b0ee2586df",
     "scripts/collect_vivado.py": "6e79c49433e91acb521371f2d194042f9774f3765485e355f52194c1ac9954ef",
-    "scripts/build_documents.py": "971197da7040c92544f5add1b989cc1e1456991d6ed643dd68059e17f4489c74",
-    "deliverables/report/main.tex": "eb95289a8568a22816e0db020fe896515f7b01037b8e74a17035464207239f60",
-    "deliverables/presentation/slides.tex": "ce00e9f30bb148261a725e13e8de0879408b3c89eb3c82eb06cb82ad1dae59b3",
+    "scripts/build_documents.py": "ab89b263964b027cf49e47781bfb7a24d0cd1ad5106c7ce1f98d520cc187e23b",
+    "deliverables/report/final-report.tex": "eb95289a8568a22816e0db020fe896515f7b01037b8e74a17035464207239f60",
+    "docs/presentations/systolic-array-scaling-technical.md": "c40ee19a2e709b04baf6bb1fba086f0ad7ce98d906131c1559bde6e2b7b5c98f",
+    "docs/presentations/03-systolic-array-scaling-readable-32-slides.pptx": "1b2956b678888f1f26f41444faa25150e9837e7742e81b3d5ef99ff3ae8a6198",
+    "docs/presentations/03-systolic-array-scaling-readable-32-slides.pdf": "ff2a20758cce2f12ea4d8cb6345a843c75489f1ff70d266426044eb2d818ef04",
     "requirements.txt": "7e8292bfa0a4937938afa4994471f4b7c3d39a171dad937228a4d1f9e7671cd1"
   }
 }

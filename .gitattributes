@@ -9,3 +9,7 @@ tb/vectors/*.txt text eol=lf
 results/verification/traces/*.csv -text
 # Preserve CSV-writer line endings and accept standard CRLF CSV records.
 results/analysis/*.csv -text whitespace=cr-at-eol
+
+# Preserve native editable presentation packages and PDF previews.
+docs/presentations/*.pptx binary
+docs/presentations/*.pdf binary
