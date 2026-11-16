@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Browser smoke checks for the generated offline replay (optional local dependency)."""
 import argparse
+import json
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -10,7 +11,11 @@ def main():
     parser.add_argument('--replay',type=Path,default=Path('results/raw/visualization/replay.html'))
     parser.add_argument('--output',type=Path,default=Path('results/raw/browser'))
     parser.add_argument('--executable',type=str)
-    args=parser.parse_args();args.output.mkdir(parents=True,exist_ok=True)
+    args=parser.parse_args()
+    pointer=Path('build/latest_check.json')
+    if args.replay==Path('results/raw/visualization/replay.html') and pointer.exists():
+        args.replay=Path(json.loads(pointer.read_text())['run'])/'visualization/replay.html'
+    args.output.mkdir(parents=True,exist_ok=True)
     with sync_playwright() as pw:
         options={'headless':True}
         if args.executable:options['executable_path']=args.executable

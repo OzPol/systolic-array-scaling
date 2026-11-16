@@ -18,13 +18,17 @@ elif [[ $# -gt 0 ]]; then
     echo 'Usage: bash scripts/bootstrap.sh [--install-system]' >&2
     exit 2
 fi
-python3 -c 'import sys; assert sys.version_info >= (3, 12), "Python 3.12+ required"'
+study_python=${PYTHON:-python3}
+if ! "$study_python" -c 'import sys; assert sys.version_info >= (3,12)' 2>/dev/null; then
+    echo 'Analysis requires Python 3.12+. Set PYTHON=python3.12 or use uv venv --python 3.12 --seed .venv.' >&2
+    exit 1
+fi
 if ! command -v "${GHDL:-ghdl}" >/dev/null; then
     echo 'GHDL is missing. Ubuntu/WSL: bash scripts/bootstrap.sh --install-system' >&2
     echo 'On macOS: brew install ghdl python make' >&2
     exit 1
 fi
-python3 -m venv .venv
+"$study_python" -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 "${GHDL:-ghdl}" --version
 .venv/bin/python --version

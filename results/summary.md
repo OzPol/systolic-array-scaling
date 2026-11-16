@@ -1,4 +1,4 @@
-> **Historical baseline from Thomas Martin.** This file records the original Questa and P=2 Vivado runs. For current validated figures, timing limitations, and missing-run status, see [analysis/report.md](analysis/report.md). Original vector hashes below describe Windows CRLF bytes; the same committed values now use canonical LF hashes in `tb/vectors/MANIFEST.txt`.
+> **Historical baseline from Thomas Martin.** This file records the original Questa sweep and all three Thomas Vivado runs. For current validated figures and timing limitations, see [analysis/report.md](analysis/report.md). Original vector hashes below describe Windows CRLF bytes; the same committed values now use canonical LF hashes in `tb/vectors/MANIFEST.txt`.
 
 # Results summary
 

@@ -1,20 +1,21 @@
-# IEEE report source
+# Final report
 
-`main.tex` is a draft manuscript in IEEE conference format, based on measured simulation data and the existing P=2 FPGA report. It explicitly marks the missing P=4/P=8 FPGA evidence. Next: compile the source in an IEEEtran-compatible TeX environment and review the layout.
+[final-report.pdf](final-report.pdf) and its editable [LaTeX source](final-report.tex) describe all eighteen simulation configurations and the three N=16 post-route FPGA implementations. The report covers architecture, verification, cycle accounting, scaling, throughput, resources, related work, and timing scope. Its appendix contains both complete activity atlases.
 
-After collecting final FPGA results:
+Tables and numerical macros come from `results/analysis/`. Comparisons use the matching 2×2 RTL configuration. The selected measurements are the original saved simulation and Vivado evidence. Report revisions remain in Git history under the same descriptive filename.
 
-1. Run `python -m analysis.report` from the repository root.
-2. Replace the pending FPGA table rows using actual post-route reports.
-3. Update the hardware discussion, abstract, and conclusion if the measured outcome changes them.
-4. Compile with a TeX distribution containing `IEEEtran`, `amsmath`, `booktabs`, `graphicx`, and `hyperref`:
+From the repository root:
 
 ```bash
-cd deliverables/report
-pdflatex -interaction=nonstopmode -halt-on-error main.tex
-pdflatex -interaction=nonstopmode -halt-on-error main.tex
+make publish
 ```
 
-5. Inspect every page, references, equations, tables, plot labels, and remaining draft/pending text. Export the reviewed PDF for submission.
+This validates the archived study, regenerates its analysis, compiles the final report in a staging directory, and packages the reviewed native presentation. A failed document build leaves the current published analysis and report intact.
 
-Upload the source and generated plot PNGs to an IEEE conference project in a LaTeX editor if you prefer that workflow. Keep the relative figure paths consistent with your project's root.
+To compile against existing generated results:
+
+```bash
+python scripts/build_documents.py
+```
+
+Outputs are `build/documents/final-report.pdf`, `presentation.pptx`, and `presentation.pdf`. The source can also be compiled directly from this directory. Compilation requires Tectonic or a complete pdfLaTeX installation with IEEEtran, TikZ, booktabs, and the report's font packages.

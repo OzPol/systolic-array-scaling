@@ -1,0 +1,7 @@
+{
+  "kind": "committed-study",
+  "simulation": "results/summary_sim.csv",
+  "hardware": "results/summary_vivado.csv",
+  "traces": "results/verification/traces",
+  "hardware_matrix_order": 16
+}

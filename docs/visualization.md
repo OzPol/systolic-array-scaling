@@ -24,8 +24,7 @@ Open `results/visualization/replay.html` directly in a browser. No server or fro
 To generate new views:
 
 ```bash
-python scripts/sim.py --sim ghdl --sweep --trace-dir results/raw/traces
-python -m analysis.replay --output results/raw/visualization
+python scripts/experiment.py
 ```
 
 The testbench records `mac_fire` and tile/step coordinates before each edge. It identifies the edge action from the counter updates after that edge. Phase codes are 1=advance, 2=budget stall, 3=tile capture, 4=serial readout. The replay focuses on compute clocks.
@@ -45,14 +44,6 @@ vsim -work build/questa tb_systolic -gP=8 -gN=16 -gB=4 -gVEC_FILE=tb/vectors/vec
 
 The wave setup adds clocks, request coordinates, useful MAC events, stalls, and readout signals. Expand the DUT hierarchy to inspect individual PE accumulators and forwarded operands.
 
-## Vivado GUI
+## Routed implementation inspection
 
-Vivado provides waveform, schematic, and device views. After one of the batch implementation runs, open its routed checkpoint in Vivado:
-
-```tcl
-open_checkpoint results/raw/vivado_p4_n16/routed.dcp
-```
-
-The netlist/schematic view shows inferred logic; the device view shows placement and routing. The offline replay answers a different question: what the logical PE grid was doing on each simulation clock.
-
-Tool references: [Vivado waveform window](https://docs.amd.com/r/en-US/ug900-vivado-logic-simulation/Wave-Window), [Vivado schematic view](https://docs.amd.com/r/en-US/ug893-vivado-ide/Schematic-Window-Display-Settings), [Questa Visualizer](https://www.siemens.com/en-us/products/ic/questa-one/debug-analysis/visualizer-debug/).
+New measurement runs retain `routed.dcp` inside each automatically named P/N directory. Open that file using Vivado's **File → Checkpoint → Open** command to inspect implemented logic and physical placement. The offline replay displays the logical PE activity recorded during simulation. The published hardware evidence consists of the original saved reports and console logs.

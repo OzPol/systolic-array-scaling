@@ -31,7 +31,7 @@ Counter values must agree with the testbench event log. A run is valid only if e
 
 ## FPGA evaluation
 
-Synthesize the same top-level design at $P=2,4,8$ with the runtime budget option and a 10 ns constraint. Use the same KV260 part and synthesis settings for all three. Record LUTs, flip-flops, DSPs, block RAM, and the report stage for each value. Record timing slack after implementation where feasible. Record the BRAM mapping reported by Vivado, including zero where applicable.
+The reported hardware comparison implements $P=2,4,8$ at $N=16$, with the runtime budget option and a 10 ns constraint. All three use the same KV260 part and synthesis settings. The automated new-experiment command additionally builds both configured matrix sizes. Record LUTs, flip-flops, DSPs, block RAM, and the report stage for each value. Record post-route setup and hold slack. Record the BRAM mapping reported by Vivado, including zero where applicable.
 
 Compare useful throughput per DSP only after confirming the DSP count and simulation workload. Convert cycles to elapsed time or MACs/second at the constrained clock **only for implementations that meet timing**. Report a timing or resource failure directly. Do not infer power or energy from FPGA resource counts.
 
@@ -44,9 +44,9 @@ For each run, retain at least: configuration ID, input seed/checksum, source com
 
 ## Reproduction and analysis commands
 
-`make check` runs vector integrity checks, Python validators, directed RTL regressions, the complete GHDL matrix sweep, and fresh plots. `python -m analysis.report` regenerates the reviewed analysis from committed summaries. See the README for Questa and Vivado alternatives.
+`make check` runs vector integrity checks, Python validators, directed RTL regressions, the complete GHDL matrix sweep, and fresh plots. `python scripts/experiment.py` analyzes the selected archived run in a new destination. `python scripts/experiment.py --measure` measures the complete study. See the README for Questa and Vivado alternatives.
 
-`analysis/model.py` implements independent closed-form cycle predictions. `analysis/report.py` requires all 18 configurations and eight cases per configuration, rejects duplicate or failed rows, checks N³ MACs and readout/counter consistency, and compares measured counts with the model. `analysis/plots.py` writes PNG and SVG figures. The FPGA plots update as each implementation report is collected.
+`analysis/model.py` implements independent closed-form cycle predictions. `analysis/report.py` requires all 18 configurations and eight cases per configuration, rejects duplicate or failed rows, checks N³ MACs and readout/counter consistency, and compares measured counts with the model. `analysis/plots.py` writes PNG and SVG figures. New complete runs require all six configured FPGA implementations. The published report uses the three saved N=16 implementations.
 
 The cycle breakdown separates N³/P² useful-equivalent clocks, tile-count × (2P−2) fill/drain clocks, one capture clock per tile, and measured budget stalls. This is capacity-normalized accounting: useful MACs occur during fill/drain too. Useful MACs overlap the fill/drain stages.
 

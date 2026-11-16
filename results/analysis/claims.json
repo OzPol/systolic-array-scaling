@@ -1,0 +1,9 @@
+{
+  "larger_grid_reduces_compute_latency": true,
+  "smallest_grid_has_highest_throughput_per_dsp": true,
+  "hardware_matrix_orders": [
+    16
+  ],
+  "reported_hardware_grids_complete": true,
+  "all_internal_timing_met": true
+}

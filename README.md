@@ -2,163 +2,159 @@
 
 [![CI](https://github.com/OzPol/systolic-array-scaling/actions/workflows/ci.yml/badge.svg)](https://github.com/OzPol/systolic-array-scaling/actions/workflows/ci.yml)
 
-A parameterized VHDL matrix multiplier for EEL5764, University of Florida. We compare **2×2, 4×4, and 8×8 PE grids**, full **8×8 and 16×16 matrix products**, and modeled input budgets of **4, 8, and 16 combined words per clock**: 18 configurations.
+A parameterized **output-stationary matrix multiplier in VHDL**, built to study how PE-grid size, operand supply, and finite workloads affect accelerator performance and FPGA cost.
 
-The question is how input supply, finite workloads, and tile overhead limit the benefit of adding arithmetic units. The input budget is an RTL model; it is not measured KV260 DRAM bandwidth.
+The project compares **2×2, 4×4, and 8×8 processing-element grids** on the same complete **8×8 and 16×16 matrix products**, with input budgets of **4, 8, and 16 combined A/B words per clock**. These choices form eighteen simulation configurations. The 2×2 grid is the performance reference.
 
-## Current evidence
+The architecture question is whether adding arithmetic units produces proportional gains when input delivery and result handling also consume time. The experiment measures compute latency, stalls, useful MAC throughput, PE utilization, complete-product speedup, FPGA resources, and internal timing.
 
-- Thomas Martin's implementation and original results were merged separately in [PR #1](https://github.com/OzPol/systolic-array-scaling/pull/1). His original commits and authorship are preserved.
-- The original Questa sweep records **144 passing cases**. An independent GHDL sweep also passes all 144, with full 36-bit output comparison and independent interface-clock checks.
-- Directed RTL regressions cover the PE, input stager, and agreement between instrumented and synthesis-mode datapaths. Python tests reject incomplete, duplicate, failed, and inconsistent measurements.
-- The measured **P=2, N=16** Vivado implementation uses **7,260 LUTs, 9,437 FFs, 4 DSPs, 0 BRAM**, with **+3.955 ns internal slack** at a 10 ns constraint.
-- **Next: run P=4 and P=8 in Vivado**, then update the FPGA comparison. The proposed study uses simulation and FPGA implementation reports.
+## Architecture
 
-At N=16/B=16, compute cycles are 1216 / 368 / 124. At N=16/P=8/B=4, 180 budget stalls increase compute latency to 304 clocks. Larger arrays still help in every tested case; the measurements show reduced scaling efficiency rather than a complete loss of scaling benefit.
+Each PE multiplies signed 16-bit operands and accumulates a 36-bit result. A values move right, B values move down, and partial sums stay in the PE. The input stager aligns operands and holds the grid while a boundary step is incomplete.
 
-Start with the [analysis](results/analysis/report.md), [contribution review](docs/review.md), and [remaining steps](docs/completion.md).
+The controller partitions C into P×P output tiles. Every tile streams the full inner dimension N, captures its P² results, and clears the grid before the next tile. After all tiles finish, the result store serializes N² output words.
+
+| PE grid | MAC units | Peak boundary demand | Output tiles, N=8 | Output tiles, N=16 |
+|---|---:|---:|---:|---:|
+| 2×2 | 4 | 4 words/clock | 16 | 64 |
+| 4×4 | 16 | 8 words/clock | 4 | 16 |
+| 8×8 | 64 | 16 words/clock | 1 | 4 |
+
+The input budget controls the implemented RTL boundary interface. The FPGA flow targets the K26 device used by KV260. A board is unnecessary for simulation, analysis, or out-of-context implementation.
+
+## Tools and workflow
+
+| Tool | Purpose |
+|---|---|
+| VHDL-2008 | PE grid, input staging, tiled controller, result storage/readout |
+| GHDL or QuestaSim | Execute the self-checking RTL testbenches and record cycles and activity |
+| Python | Generate/reference-check vectors, validate measurements, and build tables and figures |
+| Vivado | Synthesize, place, and route the RTL; report FPGA resources and internal timing |
+| Offline HTML replay | Inspect recorded MAC events, stalls, and tile transitions |
 
 ## Quick start: Windows with WSL2
 
-Run this once in **PowerShell as Administrator** if Ubuntu is not installed:
+Use an existing Ubuntu installation if you have one. Otherwise, run this once in **PowerShell as Administrator**, then complete Ubuntu's first-start setup:
 
 ```powershell
 wsl --install -d Ubuntu-24.04
 ```
 
-Restart if Windows requests it. Open **Ubuntu** from the Start menu and finish creating its Linux username/password. All subsequent commands run in that Ubuntu terminal. Keep the checkout in the Linux home directory for faster simulator file access.
+Open the **Ubuntu terminal**. Run the following there, keeping the checkout in the Linux home filesystem:
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y git
-```
 
-```bash
-git clone --branch oz-finish-systolic-study https://github.com/OzPol/systolic-array-scaling.git
+git clone https://github.com/OzPol/systolic-array-scaling.git
 cd systolic-array-scaling
-```
 
-```bash
 bash scripts/bootstrap.sh --install-system
-```
-
-```bash
 source .venv/bin/activate
-```
-
-```bash
 make check
 ```
 
-Expected final output includes three `PASS: tb_...` component tests, 18 `TB PASS ... cases=8` lines, `PASS: 144 cases`, and `Validated 18 configurations`. Any failed check returns a nonzero exit status and stops the workflow.
+The clone uses the repository's default branch. The Python analysis environment requires **Python 3.12+**. Ubuntu 24.04 supplies it; an existing Ubuntu 22.04 installation can use the managed-interpreter instructions in [tool setup](docs/setup.md).
 
-`oz-finish-systolic-study` is the completion branch. After it is merged, replace that branch name with `main` when cloning.
+A successful check includes three component-test PASS markers, eighteen configuration PASS lines with eight cases each, `PASS: 144 cases`, and the printed verification-output directory. A failed check stops the workflow with a nonzero exit status.
 
-## Linux and macOS
+### Linux and macOS
 
-On **Ubuntu 24.04 / Debian with Python 3.12+**, use the same clone, bootstrap, activation, and check commands above. The `--install-system` option installs GHDL, Python/venv, make, and git through apt; sudo may request your password. After those packages exist, `bash scripts/bootstrap.sh` only creates the Python environment and installs pinned plotting dependencies.
+On Ubuntu 24.04 or Debian with Python 3.12+, use the clone and bootstrap steps above. After the system packages exist, `bash scripts/bootstrap.sh` creates the environment without installing system tools again.
 
-On macOS with Homebrew:
+On macOS with Homebrew, install the tools and create the environment from the repository root:
 
 ```bash
 brew install ghdl python@3.12 make
-```
-
-Create the environment with Python 3.12, activate it, and install dependencies:
-
-```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 make check PYTHON=python
 ```
 
-The tested setup is Linux with GHDL and Python 3.12. macOS is an alternative setup. The open-source workflow runs without an FPGA board or paid simulator.
+Linux/GHDL is the verified workflow. The macOS commands provide the equivalent native setup. For editor integration, see [VS Code](docs/vscode.md).
 
-## Container alternative
+### Container alternative
 
-With Docker installed, from the repository root:
+From the repository root, with Docker installed:
 
 ```bash
 docker build -t systolic-study .
 docker run --rm systolic-study
 ```
 
-To retain results on the host:
+To retain generated outputs on the host:
 
 ```bash
 mkdir -p results/raw
 docker run --rm -v "$PWD/results/raw:/app/results/raw" systolic-study
 ```
 
-The image runs `make check` using Ubuntu 24.04, GHDL, Python, and pinned Python packages. The Docker configuration is ready for a local build.
+The container runs `make check` with Ubuntu 24.04, GHDL, Python, and the pinned dependencies. Vivado runs separately in an environment with its installation and device support.
 
-## Run individual steps
+## Run the project
 
-Activate `.venv` before running these commands. Run them from the repository root.
+Run commands from the repository root. The Makefile selects `.venv/bin/python` when that environment exists.
 
-| Task | Command | Output |
+| Task | Command | Result |
 |---|---|---|
-| Verify committed vectors and checksums | `python scripts/gen_vectors.py --check` | Read-only reproducibility check |
-| Regenerate vectors intentionally | `python scripts/gen_vectors.py` | `tb/vectors/` |
-| Python validation tests | `python -m unittest discover -s tests -v` | Test results in terminal |
-| Directed RTL tests | `python scripts/test_rtl.py --sim ghdl` | `build/ghdl_units/*.txt` |
-| One matrix configuration | `python scripts/sim.py --sim ghdl --p 8 --n 16 --b 4` | Eight cases and provenance under `results/raw/` |
-| All configurations | `python scripts/sim.py --sim ghdl --sweep` | `results/raw/ghdl_sim_results.csv` and `.json` |
-| Analyze new measurements | `python -m analysis.report --simulation results/raw/ghdl_sim_results.csv --output results/raw/analysis` | Validated metrics, report, PNG/SVG plots |
-| Reproduce plots from reviewed summaries | `python -m analysis.report` | `results/analysis/` |
-| Complete open-source workflow | `make check` | All of the checks above and new analysis |
+| Analyze the saved study | `make analysis` | New validated tables, plots, and offline replay |
+| Measure a complete new study | `make study` | All eighteen simulation configurations and six sequential P/N FPGA builds, followed by analysis |
+| Open-source verification | `make check` | Vector checks, Python tests, RTL regressions, complete GHDL sweep, analysis, and replay |
+| Python validation tests | `make unit` | Measurement and pipeline regression checks |
+| Directed RTL regressions | `make rtl` | PE, input-stager, and synthesis-mode checks |
+| Simulation sweep only | `make sweep` | All eighteen configurations and per-case measurements |
+| Check the fixed vectors | `make vectors` | Verify committed vectors and checksums |
+| Rebuild published documents | `make publish` | Refresh the saved-study analysis and document outputs |
 
-The CLI rewrites the selected run CSV for each invocation; use `--output results/raw/my_run.csv` to retain a separate run. The JSON sidecar records tool version, commit, dirty state, source/vector hashes, and CSV hash. Generated work directories are ignored by git; deliberately reviewed evidence is committed separately.
+Measurement and analysis commands create unique UTC-timestamped directories under `results/raw/`. They print the destination, record source identity and tool versions, and preserve earlier runs. `make study` checks dependencies before starting its long builds and executes the FPGA configurations one at a time.
 
-### Questa instead of GHDL
+For a targeted simulation or deliberate vector regeneration:
 
-Install/licence Questa and put `vlib`, `vcom`, and `vsim` on PATH. Then:
+```bash
+python scripts/sim.py --sim ghdl --p 8 --n 16 --b 4
+python scripts/gen_vectors.py --help
+```
+
+### QuestaSim
+
+With the licensed `vlib`, `vcom`, and `vsim` executables on PATH:
 
 ```bash
 python scripts/test_rtl.py --sim questa
 python scripts/sim.py --sim questa --sweep
-python -m analysis.report --simulation results/raw/questa_sim_results.csv --output results/raw/questa_analysis
 ```
 
-The shell wrappers in `scripts/questa/` call this runner. The original run used QuestaSim 2026.2. Use the updated commands in the team’s licensed environment. [Tool setup and troubleshooting](docs/setup.md) covers PATH, versions, environment variables, and expected outputs.
+The runner uses the same vectors, numerical reference, coverage checks, and measurement format. Licensing and compile-order details are in the setup guide.
 
-### Vivado: remaining FPGA runs
+### Vivado
 
-Open a Vivado-configured command shell, or source the installed Linux `settings64.sh`. From the repo root:
+Activate your installed Vivado environment before FPGA implementation. For the installation path used by the Ubuntu setup:
 
 ```bash
-python scripts/vivado/run.py --p 4 8 --n 16
+source "$HOME/AMDDesignTools/2025.2.1/Vivado/settings64.sh"
+vivado -version
 ```
 
-The runner executes **one configuration at a time**. Do not start parallel copies. It uses `xck26-sfvc784-2LV-c`, a 10 ns clock, `INSTR=false`, and out-of-context synth/opt/place/route. It retains reports, console output, source hashes, and completion state under `results/raw/vivado_p<P>_n16/`.
-
-Collect completed runs while preserving the existing P=2 evidence, then refresh plots:
+Use `make study` for the complete experiment. The hardware-only runner is also available:
 
 ```bash
-python scripts/collect_vivado.py
-python -m analysis.report
+python scripts/vivado/run.py
 ```
 
-For a clean rerun of every size using the current RTL, use a fresh destination:
-
-```bash
-python scripts/vivado/run.py --p 2 4 8 --n 16 --output-root results/raw/current_rtl
-python scripts/collect_vivado.py --source results/raw/current_rtl
-python -m analysis.report
-```
-
-`--resume` skips completed runs only when source hashes match. Incomplete/mismatched existing directories require a fresh `--output-root`; the runner does not delete old evidence. Vivado and its license/device support must be installed separately. [Completion steps](docs/completion.md) explains what to inspect and commit after each run.
+Its default covers all P=2,4,8 and N=8,16 pairs in one automatically named destination. `--p 4 --n 8` narrows a debugging run; `--resume` accepts completed builds only when their recorded source matches. The flow uses `xck26-sfvc784-2LV-c`, a 10 ns constraint, `INSTR=false`, and out-of-context synthesis, optimization, placement, and routing. See the setup guide for installation and report inspection.
 
 ## Watch the simulation
 
-The [offline replay](results/visualization/replay.html) lets you select a configuration, play or scrub individual clocks, and switch between three views:
+Open the [offline replay](results/visualization/replay.html) from a local checkout. Choose a configuration, play or scrub physical clocks, and switch between these views:
 
-- **PE topology:** the real grid connections and active MACs, with each cell showing completed work for its tile.
-- **3D work surface:** PE row and column on the base; completed useful MACs on the vertical axis.
-- **3D space–time:** each point is a recorded MAC event; time runs vertically, making input-wait gaps visible.
+- **PE topology:** the grid connections, active MACs, and completed work within each tile.
+- **3D work surface:** completed useful MACs over PE row and column.
+- **3D space–time:** recorded MAC events over row, column, and physical time, exposing input-wait gaps.
 
-Open `results/visualization/replay.html` in your browser after cloning. It works offline. The 3D views rotate by dragging.
+The 3D views rotate by dragging. No server or frontend installation is required. GitHub displays the source HTML; download or clone the repository to run the replay.
+
+### Activity across all grid and input-budget configurations
 
 ![All nine configurations for 8×8 matrices](results/visualization/activity_matrix08.png)
 
@@ -166,48 +162,54 @@ Open `results/visualization/replay.html` in your browser after cloning. It works
 
 ![All arrays and matrix workloads](results/visualization/tile_story.gif)
 
-To regenerate everything from a fresh simulation:
+The sheets cover both complete matrix workloads and all eighteen configurations. The animation compares progress on a shared physical clock. Trace validation checks MAC totals, holds, tile completion, and readout before generating these views.
 
-```bash
-python scripts/sim.py --sim ghdl --sweep --trace-dir results/raw/traces
-python -m analysis.replay --trace-dir results/raw/traces --output results/raw/visualization
-```
+`make analysis` rebuilds the replay and activity figures from the saved traces into a new output directory. `make study` records fresh traces as part of its full experiment. [Visualization details](docs/visualization.md) explain the geometry, waveforms, and routed-checkpoint inspection.
 
-`make check` also builds these visualizations. The replay uses the fixed-seed performance case (case 5) from each configuration. Trace validation checks every MAC event, tile completion, and stall before generating the views.
+## Measured findings
 
-The overview displays all 18 configurations. Volume slices show PE activity over physical time; work-surface height shows progress through the complete product; the wavefront surfaces mark each PE’s first and last MAC. The scaling surface joins the nine measured P/B configurations for each matrix size.
+The saved study contains **144 passing simulation cases** and **three N=16 post-route FPGA implementations**. At N=16 and B=16, the 8×8 grid provides **9.806× compute speedup** over 2×2 and **3.874× complete-product speedup** after serial readout. All three FPGA builds meet the constrained internal 10 ns target. The largest grid minimizes latency; the smallest delivers the most useful work per DSP.
 
-Questa and Vivado also provide their own waveform and design-inspection GUIs. See [visualization notes](docs/visualization.md) for those views and the story behind the generated figures.
+![Compute and readout-inclusive scaling](results/analysis/speedup.png)
 
-## CI, artifacts, and future PRs
+![Measured FPGA resources](results/analysis/fpga_resources.png)
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs automatically for **every pull request**, pushes to `main` and `oz-*` branches, and manual workflow dispatch. It installs GHDL and Python 3.12, installs the pinned requirements, and runs `make check` plus browser checks for the replay. GitHub Actions uses read-only repository permissions; action revisions are pinned to commit hashes.
+The [generated analysis](results/analysis/report.md) contains the configuration tables and interpretations, including utilization, stalls, scaling efficiency, and timing-qualified throughput. Original simulation measurements, routed reports, and logs remain the numerical sources. The timing result covers constrained internal FPGA paths; board I/O, physical DRAM rates, CPU comparisons, and energy are outside this experiment.
 
-Open **Actions → CI → a run → Artifacts** to download the measured CSV, provenance JSON, simulator logs, report, plots, and offline replay. Artifacts remain available for 30 days. Failure logs are uploaded even when a check fails. Generated reports are the build deliverable; there is no web deployment or FPGA programming step.
+## CI and artifacts
 
-After the first successful run, an administrator can make **`VHDL and analysis`** a required check in **Settings → Rules → Rulesets → main** (or branch protection). Enable “Require a pull request before merging” and require that check if you want merges blocked on failures. The workflow does not change repository rules automatically.
+[CI](.github/workflows/ci.yml) runs the open-source verification and Chromium replay checks for pull requests, configured branch pushes, and manual dispatch. Action revisions are pinned and repository permissions are read-only. Vivado implementation uses the separately installed hardware toolchain.
 
-Vivado is intentionally separate from hosted PR CI. GitHub-hosted runners do not have the team's licensed tool installation. A future licensed self-hosted runner can call the same documented Vivado command; keep that a manually controlled trusted workflow.
+Download generated CSVs, provenance, logs, tables, figures, and replay files through **Actions → CI → run → Artifacts**. The workflow retains outputs for thirty days and uploads diagnostic artifacts on failure.
 
 ## Repository map
 
 | Path | Purpose |
 |---|---|
-| [rtl/](rtl/) | Types, PE, array, input staging, tiled controller/readout |
-| [tb/](tb/) | Full-matrix testbench, directed RTL regressions, fixed vectors |
-| [analysis/](analysis/) | Separate cycle model, strict measurement validation, figures |
-| [tests/](tests/) | Python tests for measurement integrity and report parsing |
-| [scripts/](scripts/) | Setup, simulation, report collection, Vivado runs |
+| [rtl/](rtl/) | Types, PE, grid, input staging, tiled controller, and readout |
+| [tb/](tb/) | Fixed vectors, complete-product testbench, directed RTL regressions |
+| [analysis/](analysis/) | Independent cycle model, measurement validation, metrics, plots, and replay |
+| [tests/](tests/) | Python regression tests |
+| [scripts/](scripts/) | Setup, simulation, experiment orchestration, report collection, document builds |
 | [constraints/](constraints/) | Shared 10 ns clock constraint |
-| [results/](results/) | Reviewed measurements, provenance, reports, plots |
-| [docs/architecture.md](docs/architecture.md) | Clock conventions, interfaces, arithmetic, FSM, measurement definitions |
-| [docs/experiments.md](docs/experiments.md) | Workloads, metrics, comparison rules |
-| [docs/configurations.csv](docs/configurations.csv) | The 18 architectural configurations |
-| [docs/setup.md](docs/setup.md) | Tool-specific setup and troubleshooting |
-| [docs/review.md](docs/review.md) | Contribution assessment and technical findings |
-| [docs/completion.md](docs/completion.md) | Remaining work, ordered steps, deliverable gates |
-| [deliverables/](deliverables/) | Proposal, report source, video outline |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Branches, commit scope, tests, evidence requirements |
+| [results/](results/) | Saved measurements, verification records, FPGA reports, generated figures |
+| [docs/configurations.csv](docs/configurations.csv) | The eighteen architectural parameter combinations |
+| [docs/documentation.md](docs/documentation.md) | Walkthrough of the matrix operation and project rationale |
+| [docs/architecture.md](docs/architecture.md) | Interfaces, arithmetic, timing conventions, and controller behavior |
+| [docs/experiments.md](docs/experiments.md) | Workloads, metric definitions, and comparison rules |
+| [docs/setup.md](docs/setup.md) | Installation, tool configuration, and troubleshooting |
+| [docs/review.md](docs/review.md) | Chronological development history and verification records |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Change scope, validation, and measurement integrity |
+
+## Project documents
+
+- IEEE report: [PDF](deliverables/report/final-report.pdf) and [editable source](deliverables/report/final-report.tex).
+- Presentations: [all three editable editions](docs/presentations/) and the [technical Markdown deck](docs/presentations/systolic-array-scaling-technical.md).
+- Five-minute speaking material: [narration](deliverables/presentation/narration.md), covering the first thirteen slides of the expanded editions.
+- Submitted proposal: [PDF](docs/eel5764_systolic_array_project_proposal.pdf) and [Markdown](deliverables/proposal/Proposal.md).
+- Original video storyboard: [outline](deliverables/video/outline.md).
+- Course requirements: [guidelines PDF](docs/eel5764_project_guidelines_fall_2026.pdf).
+- Artifact locations: [project artifact index](docs/completion.md).
 
 ## Team
 

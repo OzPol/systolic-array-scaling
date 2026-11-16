@@ -45,7 +45,23 @@ __pycache__/
 venv/
 
 # Editor / OS
-.vscode/
+.vscode/*
+!.vscode/tasks.json
+!.vscode/settings.json
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local implementation checkpoints and LaTeX scratch files
+*.dcp
+*.aux
+*.fdb_latexmk
+*.fls
+*.nav
+*.snm
+*.toc
+*.out
+*.synctex.gz
+
+# Publication stages are temporary, never measurement archives.
+results/.analysis-*/
